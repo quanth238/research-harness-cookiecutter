@@ -1,0 +1,11 @@
+{
+  "project_name": "Research Harness",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-').replace('_', '-').replace('/', '-') }}",
+  "research_goal": "Produce reproducible empirical evidence for the research question.",
+  "source_repo_name": "source",
+  "upstream_repo_url": "",
+  "python_command": "python3",
+  "include_claude_md": ["no", "yes"],
+  "author_name": "Research Harness Contributors"
+}
+

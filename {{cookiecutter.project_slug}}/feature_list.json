@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "active_task_limit": 1,
+  "features": [
+    {
+      "id": "R001",
+      "state": "not_started",
+      "claim_status": "speculative",
+      "task_family": "reproducibility",
+      "behavior": "A fresh checkout can run the baseline smoke command without hidden manual steps.",
+      "verification": ["make smoke"],
+      "evidence": null,
+      "dependencies": []
+    },
+    {
+      "id": "R002",
+      "state": "not_started",
+      "claim_status": "speculative",
+      "task_family": "source_setup",
+      "behavior": "The wrapped source repository exists under src/{{ cookiecutter.source_repo_name }} and has a documented smoke command.",
+      "verification": ["make source-status", "make source-smoke"],
+      "evidence": null,
+      "dependencies": ["R001"]
+    }
+  ]
+}
+

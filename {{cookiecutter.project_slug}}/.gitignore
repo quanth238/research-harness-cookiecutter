@@ -1,0 +1,17 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+
+# Local/large research outputs. Keep selected artifacts only when intentionally versioned.
+experiments/runs/
+logs/
+results/
+artifacts/checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+
