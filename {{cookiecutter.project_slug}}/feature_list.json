@@ -7,7 +7,7 @@
       "state": "not_started",
       "claim_status": "speculative",
       "task_family": "reproducibility",
-      "behavior": "A fresh checkout can run the baseline smoke command without hidden manual steps.",
+      "behavior": "A fresh generated harness can run structural smoke checks without hidden manual steps.",
       "verification": ["make smoke"],
       "evidence": null,
       "dependencies": []
@@ -17,11 +17,10 @@
       "state": "not_started",
       "claim_status": "speculative",
       "task_family": "source_setup",
-      "behavior": "The wrapped source repository exists under src/{{ cookiecutter.source_repo_name }} and has a documented smoke command.",
+      "behavior": "The wrapped source repository exists under src/{{ cookiecutter.source_repo_name }} and has a configured smoke command.",
       "verification": ["make source-status", "make source-smoke"],
       "evidence": null,
       "dependencies": ["R001"]
     }
   ]
 }
-
