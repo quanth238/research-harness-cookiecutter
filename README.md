@@ -99,6 +99,9 @@ make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>
 make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>
 ```
 
+`make arc-bootstrap` creates `.arc/venv` for AutoResearchClaw and `.venv` for
+ARC sandbox experiment execution.
+
 For OpenAI-compatible API-key auth, use `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
 
 The final paper gate is strict: simulated experiments, missing metrics, missing run records, or missing citation verification block final paper acceptance.

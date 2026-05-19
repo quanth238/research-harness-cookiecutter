@@ -23,6 +23,11 @@ make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>
 make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>
 ```
 
+`make arc-bootstrap` creates two separate environments: `.arc/venv` for the
+AutoResearchClaw runtime and `.venv` for ARC sandbox experiment execution. This
+keeps ARC package dependencies separate from generated experiment code while
+matching `experiment.sandbox.python_path` in the ARC config.
+
 To override the Codex defaults:
 
 ```bash

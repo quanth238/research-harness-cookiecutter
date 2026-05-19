@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -23,17 +24,26 @@ def venv_python(venv: Path) -> Path:
     return venv / "bin" / "python"
 
 
+def install_packages(python: Path, packages: list[str]) -> None:
+    if packages:
+        run([str(python), "-m", "pip", "install", *packages])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-url", required=True)
     parser.add_argument("--ref", required=True)
     parser.add_argument("--arc-dir", required=True)
     parser.add_argument("--venv", required=True)
+    parser.add_argument("--sandbox-venv", default="")
+    parser.add_argument("--optional-packages", default="")
     parser.add_argument("--python", required=True)
     args = parser.parse_args()
 
     arc_dir = ROOT / args.arc_dir
     venv_dir = ROOT / args.venv
+    sandbox_venv_dir = ROOT / args.sandbox_venv if args.sandbox_venv else None
+    optional_packages = shlex.split(args.optional_packages)
 
     if arc_dir.exists():
         if not (arc_dir / ".git").exists():
@@ -51,9 +61,18 @@ def main() -> int:
     py = venv_python(venv_dir)
     run([str(py), "-m", "pip", "install", "--upgrade", "pip"])
     run([str(py), "-m", "pip", "install", "-e", str(arc_dir)])
+    install_packages(py, optional_packages)
+
+    if sandbox_venv_dir:
+        run([args.python, "-m", "venv", str(sandbox_venv_dir)])
+        sandbox_py = venv_python(sandbox_venv_dir)
+        run([str(sandbox_py), "-m", "pip", "install", "--upgrade", "pip"])
+        install_packages(sandbox_py, optional_packages)
 
     print(f"[arc-bootstrap] installed AutoResearchClaw at {arc_dir}")
     print(f"[arc-bootstrap] runtime python: {py}")
+    if sandbox_venv_dir:
+        print(f"[arc-bootstrap] sandbox python: {venv_python(sandbox_venv_dir)}")
     return 0
 
 

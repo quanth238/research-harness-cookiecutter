@@ -5,6 +5,8 @@ ARC_REPO_URL ?= {{ cookiecutter.autoresearchclaw_repo_url }}
 ARC_REF ?= {{ cookiecutter.autoresearchclaw_ref }}
 ARC_DIR ?= external/AutoResearchClaw
 ARC_VENV ?= .arc/venv
+ARC_SANDBOX_VENV ?= .venv
+ARC_OPTIONAL_PACKAGES ?= matplotlib
 ARC_AUTH ?= codex
 ARC_CONFIG ?= configs/researchclaw.codex.yaml
 ARC_RUN_ROOT ?= artifacts/arc-runs
@@ -47,7 +49,7 @@ check-run-record:
 	@$(PYTHON) scripts/check_run_record.py "$(FILE)"
 
 arc-bootstrap:
-	@$(PYTHON) scripts/arc_bootstrap.py --repo-url "$(ARC_REPO_URL)" --ref "$(ARC_REF)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)"
+	@$(PYTHON) scripts/arc_bootstrap.py --repo-url "$(ARC_REPO_URL)" --ref "$(ARC_REF)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --sandbox-venv "$(ARC_SANDBOX_VENV)" --optional-packages "$(ARC_OPTIONAL_PACKAGES)" --python "$(ARC_PYTHON)"
 
 arc-doctor:
 	@$(PYTHON) scripts/arc_doctor.py --auth "$(ARC_AUTH)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)" --config "$(ARC_CONFIG)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"

@@ -33,7 +33,7 @@ SSH to the Windows host, enter WSL, and install the required runtime:
 ssh {{ cookiecutter.remote_wsl_ssh_host }}
 wsl -d {{ cookiecutter.remote_wsl_distro }}
 sudo apt-get update
-sudo apt-get install -y git python3 python3-venv python3-pip nodejs npm
+sudo apt-get install -y git make build-essential python3 python3-venv python3-pip nodejs npm
 sudo npm i -g @openai/codex
 ```
 
@@ -76,6 +76,9 @@ make remote-wsl-arc-doctor
 
 `remote-wsl-doctor` checks SSH, WSL, GPU visibility, Git, Python, Node/npm,
 Codex CLI, Codex login, disk, and optional Docker/LaTeX.
+
+`remote-wsl-bootstrap` creates `.arc/venv` for AutoResearchClaw and `.venv` for
+ARC sandbox experiment execution inside WSL.
 
 ## Remote ARC Run And Gate
 
