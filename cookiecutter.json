@@ -5,7 +5,9 @@
   "source_repo_name": "source",
   "upstream_repo_url": "",
   "python_command": "python3",
+  "arc_python_command": "python3.11",
+  "autoresearchclaw_repo_url": "https://github.com/aiming-lab/AutoResearchClaw.git",
+  "autoresearchclaw_ref": "84dad0a401404739cfcc47851cd1d282b671bb2f",
   "include_claude_md": ["no", "yes"],
   "author_name": "Research Harness Contributors"
 }
-

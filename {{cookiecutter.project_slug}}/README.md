@@ -63,9 +63,14 @@ Research-specific checks remain flexible. Replace placeholder targets such as `s
 - `docs/artifacts.md` - logs, manifests, figures, tables, checkpoints, and submissions.
 - `docs/paper.md` - paper claims, figures, tables, and evidence links.
 - `docs/failure-log.md` - negative, failed, or unstable runs.
+- `docs/auto_research.md` - managed AutoResearchClaw backend workflow and gates.
 
 ## Evidence Rule
 
 A result is not accepted because it looks plausible. It is accepted only when the command, config, seed, log, metric file, artifact path, and verification result are recorded in repo artifacts.
+
+For AutoResearchClaw-managed runs, `make arc-paper-gate RUN_DIR=...` must pass before the final paper can be treated as accepted evidence.
+
+The default ARC auth mode is `ARC_AUTH=codex`, which uses the existing Codex CLI login through `codex exec`. The harness never reads `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`; override those Make variables if your account or environment needs a different model. To use API-key auth instead, set `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
 
 For larger projects, the optional files under `roles/` and `templates/` can support planner/generator/evaluator style handoffs. They are not required for the default workflow.

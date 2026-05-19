@@ -13,6 +13,9 @@ results/*
 !results/.gitkeep
 !results/manifests/
 !results/manifests/**
+external/AutoResearchClaw/
+.arc/
+artifacts/arc-runs/
 artifacts/checkpoints/
 *.ckpt
 *.pth

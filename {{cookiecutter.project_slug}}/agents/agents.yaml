@@ -1,0 +1,30 @@
+schema_version: 1
+backend: codex-cli
+communication: file_artifacts
+roles:
+  orchestrator:
+    brief: agents/orchestrator.md
+    can_launch_workers: true
+    may_mark_passing: false
+  literature:
+    brief: agents/literature.md
+    may_mark_passing: false
+  protocol:
+    brief: agents/protocol.md
+    may_mark_passing: false
+  experiment:
+    brief: agents/experiment.md
+    may_mark_passing: false
+  evaluator:
+    brief: agents/evaluator.md
+    may_mark_passing: false
+  paper:
+    brief: agents/paper.md
+    may_mark_passing: false
+  reviewer:
+    brief: agents/reviewer.md
+    may_mark_passing: false
+required_outputs:
+  - work/agent_outbox/<task_id>/AGENT_RESULT.md
+  - work/agent_runs/<task_id>/prompt.md
+  - work/agent_runs/<task_id>/stdout.log

@@ -1,11 +1,23 @@
 SRC_DIR ?= src/{{ cookiecutter.source_repo_name }}
 PYTHON ?= {{ cookiecutter.python_command }}
+ARC_PYTHON ?= {{ cookiecutter.arc_python_command }}
+ARC_REPO_URL ?= {{ cookiecutter.autoresearchclaw_repo_url }}
+ARC_REF ?= {{ cookiecutter.autoresearchclaw_ref }}
+ARC_DIR ?= external/AutoResearchClaw
+ARC_VENV ?= .arc/venv
+ARC_AUTH ?= codex
+ARC_CONFIG ?= configs/researchclaw.codex.yaml
+ARC_RUN_ROOT ?= artifacts/arc-runs
+CODEX_CLI ?= codex
+CODEX_MODEL ?= gpt-5.5
+CODEX_REASONING_EFFORT ?= xhigh
 
 .PHONY: setup smoke test check verify-feature clean-session source-status source-smoke \
-	verify-protocol verify-data verify-metric verify-one-scene verify-figure handoff-check check-run-record
+	verify-protocol verify-data verify-metric verify-one-scene verify-figure handoff-check check-run-record \
+	arc-bootstrap arc-doctor arc-doctor-live arc-check arc-run arc-resume arc-import arc-verify arc-paper-gate agent-run
 
 setup:
-	@mkdir -p work/verification_logs experiments/manifests experiments/runs logs/verification results/manifests tests docs roles templates scripts configs evals artifacts/figures artifacts/tables artifacts/checkpoints paper src
+	@mkdir -p work/verification_logs work/agent_runs work/agent_inbox work/agent_outbox work/locks experiments/manifests experiments/runs logs/verification results/manifests tests docs/kb/questions docs/kb/literature docs/kb/experiments docs/kb/findings docs/kb/decisions docs/kb/reviews roles templates scripts configs evals artifacts/figures artifacts/tables artifacts/checkpoints artifacts/arc-runs paper src external .arc agents
 	@echo "Harness directories ready."
 
 smoke:
@@ -27,6 +39,43 @@ handoff-check:
 check-run-record:
 	@test -n "$(FILE)" || (echo "Usage: make check-run-record FILE=experiments/manifests/<run_id>.json" && exit 2)
 	@$(PYTHON) scripts/check_run_record.py "$(FILE)"
+
+arc-bootstrap:
+	@$(PYTHON) scripts/arc_bootstrap.py --repo-url "$(ARC_REPO_URL)" --ref "$(ARC_REF)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)"
+
+arc-doctor:
+	@$(PYTHON) scripts/arc_doctor.py --auth "$(ARC_AUTH)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)" --config "$(ARC_CONFIG)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"
+
+arc-doctor-live:
+	@$(PYTHON) scripts/arc_doctor.py --live-probe --auth "$(ARC_AUTH)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)" --config "$(ARC_CONFIG)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"
+
+arc-check:
+	@$(PYTHON) scripts/arc_doctor.py --static-only --auth "$(ARC_AUTH)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --python "$(ARC_PYTHON)" --config "$(ARC_CONFIG)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"
+
+arc-run:
+	@test -n "$(TOPIC)" || (echo "Usage: make arc-run TOPIC=\"research topic\"" && exit 2)
+	@CODEX_MODEL="$(CODEX_MODEL)" CODEX_REASONING_EFFORT="$(CODEX_REASONING_EFFORT)" $(PYTHON) scripts/arc_run.py --topic "$(TOPIC)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --config "$(ARC_CONFIG)" --run-root "$(ARC_RUN_ROOT)"
+
+arc-resume:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-resume RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@CODEX_MODEL="$(CODEX_MODEL)" CODEX_REASONING_EFFORT="$(CODEX_REASONING_EFFORT)" $(PYTHON) scripts/arc_run.py --resume --run-dir "$(RUN_DIR)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --config "$(ARC_CONFIG)" --run-root "$(ARC_RUN_ROOT)"
+
+arc-import:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-import RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@$(PYTHON) scripts/import_arc_run.py "$(RUN_DIR)"
+
+arc-verify:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@$(PYTHON) scripts/verify_arc_run.py "$(RUN_DIR)"
+
+arc-paper-gate:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@$(PYTHON) scripts/verify_paper_gate.py "$(RUN_DIR)"
+
+agent-run:
+	@test -n "$(ROLE)" || (echo "Usage: make agent-run ROLE=literature TASK=ARC-LIT-001" && exit 2)
+	@test -n "$(TASK)" || (echo "Usage: make agent-run ROLE=literature TASK=ARC-LIT-001" && exit 2)
+	@$(PYTHON) scripts/run_agent.py --role "$(ROLE)" --task "$(TASK)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"
 
 source-status:
 	@test -d "$(SRC_DIR)" || (echo "Missing SRC_DIR=$(SRC_DIR). Clone or copy your source repo there." && exit 2)
