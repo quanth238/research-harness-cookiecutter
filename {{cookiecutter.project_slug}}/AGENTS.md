@@ -35,6 +35,9 @@ This repository is an empirical research harness. The agent's job is not to work
 - Prefer cheap proxy validation before expensive GPU training, rendering, or robotics simulation.
 - Keep implementation changes separate from paper-writing and result-interpretation changes unless the task explicitly combines them.
 - Record negative results and failed runs; do not hide them by only reporting successful runs.
+- Do not run a serious AutoResearchClaw paper pipeline until `make research-preflight` passes.
+- Use `make arc-run-smoke` only for infrastructure checks; smoke runs cannot pass final paper acceptance.
+- Treat upstream paper baseline numbers as reference context only. Accepted baseline numbers must come from harness run records produced by our own runs.
 
 ## Commands
 - `make setup` prepares harness directories.
@@ -45,6 +48,19 @@ This repository is an empirical research harness. The agent's job is not to work
 - `make source-status` checks the wrapped source repository status.
 - `make handoff-check` validates end-of-session continuity artifacts.
 - `make check-run-record FILE=...` validates a research run manifest.
+- `make research-preflight` blocks serious ARC paper runs until data, metrics, reproduced baseline, novelty/theory, and venue-readiness gates pass.
+- `make verify-data`, `make verify-metric`, `make verify-baseline`, `make verify-novelty`, and `make verify-venue` run individual preflight gates.
+- `make arc-check` validates the static AutoResearchClaw managed backend scaffold.
+- `make arc-bootstrap` clones and installs the pinned AutoResearchClaw backend.
+- `make arc-doctor` validates the selected ARC auth mode. Default `ARC_AUTH=codex` uses Codex CLI login, not `OPENAI_API_KEY`.
+- `make arc-doctor-live` optionally spends a tiny Codex call to verify live model access.
+- `make arc-run TOPIC="..."` runs AutoResearchClaw under harness-controlled output paths.
+- `make arc-run-smoke TOPIC="..."` runs AutoResearchClaw for infrastructure testing only and marks the run as non-paper.
+- `make arc-import RUN_DIR=...`, `make arc-verify RUN_DIR=...`, and `make arc-paper-gate RUN_DIR=...` import and gate ARC outputs.
+- `make agent-run ROLE=... TASK=...` launches a bounded Codex CLI worker using file-based handoff.
+- `make remote-wsl-doctor` checks the configured WSL/GPU runner without mutating it.
+- `make remote-wsl-sync-auth` explicitly syncs local Codex CLI auth files into WSL when the operator has approved it.
+- `make remote-wsl-arc-doctor`, `make remote-wsl-bootstrap`, `make remote-wsl-run`, `make remote-wsl-import`, `make remote-wsl-verify`, and `make remote-wsl-paper-gate` dispatch ARC work to the configured WSL project root.
 - `make clean-session` performs the end-of-session cleanup routine.
 - Research-specific placeholder targets such as `make verify-protocol`, `make source-smoke`, `make verify-data`, `make verify-metric`, `make verify-one-scene`, and `make verify-figure` must be replaced before their tasks can pass.
 
@@ -59,6 +75,18 @@ This repository is an empirical research harness. The agent's job is not to work
 - Read `docs/paper.md` before changing figures, tables, text, or result claims.
 - Read `docs/source_repo.md` before changing or wrapping upstream source code.
 - Read `docs/failure-log.md` before repeating a failed experiment family.
+- Read `docs/auto_research.md` before running or accepting AutoResearchClaw-managed outputs.
+- Read `docs/remote_wsl.md` before dispatching ARC work to WSL.
+
+## AutoResearchClaw Managed Backend
+- Treat AutoResearchClaw as an optional backend, not the source of truth.
+- Default ARC auth uses `codex exec` through `scripts/codex_acp_shim.py`; do not read or copy `~/.codex/auth.json`.
+- ARC Codex calls and `make agent-run` default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`.
+- To use API-key auth, pass `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
+- Raw ARC runs live under `artifacts/arc-runs/` and remain unaccepted until imported and verified.
+- A final paper requires `make arc-paper-gate RUN_DIR=...`; draft paper files alone are not sufficient.
+- The ARC Codex backend is read-only text generation. Codex worker agents may write outputs under `work/agent_outbox/`, but only verification scripts may mark work passing.
+- WSL/GPU is an execution target only. Remote ARC outputs still require the same import, verify, and paper-gate checks.
 
 ## Optional Reports
 - For simple tasks, update `feature_list.json`, `PROGRESS.md`, and `session-handoff.md`.

@@ -23,18 +23,41 @@ REQUIRED_FILES = [
     "docs/data.md",
     "docs/metrics.md",
     "docs/baselines.md",
+    "docs/novelty.md",
+    "docs/venue_readiness.md",
     "docs/experiments.md",
     "docs/testing.md",
     "docs/artifacts.md",
     "docs/paper.md",
     "docs/source_repo.md",
     "docs/failure-log.md",
+    "docs/auto_research.md",
+    "docs/remote_wsl.md",
+    "configs/researchclaw.yaml",
+    "configs/researchclaw.codex.yaml",
+    "configs/researchclaw.openai.yaml",
+    "agents/agents.yaml",
     "templates/RUN_RECORD.json",
+    "templates/AGENT_BRIEF.md",
+    "templates/AGENT_RESULT.md",
+    "templates/ARC_3_AGENT_PROMPT.md",
     "scripts/verify_feature.py",
     "scripts/verify_feature.sh",
     "scripts/clean_session.sh",
     "scripts/check_handoff.py",
     "scripts/check_run_record.py",
+    "scripts/verify_research_preflight.py",
+    "scripts/arc_bootstrap.py",
+    "scripts/arc_doctor.py",
+    "scripts/arc_run.py",
+    "scripts/codex_acp_shim.py",
+    "scripts/import_arc_run.py",
+    "scripts/verify_arc_run.py",
+    "scripts/verify_paper_gate.py",
+    "scripts/run_agent.py",
+    "scripts/remote_wsl_exec.sh",
+    "scripts/remote_wsl_doctor.sh",
+    "scripts/sync_codex_auth_to_wsl.sh",
 ]
 ACTIVE_STATES = {"active"}
 VALID_STATES = {"not_started", "active", "blocked", "passing"}
@@ -92,6 +115,7 @@ def main() -> int:
     seen_ids: set[str] = set()
     active_count = 0
     dependency_edges: dict[str, list[str]] = {}
+    feature_by_id: dict[str, dict[str, object]] = {}
 
     for index, feature in enumerate(features):
         if not isinstance(feature, dict):
@@ -103,6 +127,7 @@ def main() -> int:
         if feature_id in seen_ids:
             return fail(f"duplicate feature id: {feature_id}")
         seen_ids.add(feature_id)
+        feature_by_id[feature_id] = feature
 
         state = feature.get("state")
         if state not in VALID_STATES:
@@ -136,6 +161,12 @@ def main() -> int:
         for dependency in dependencies:
             if dependency not in seen_ids:
                 return fail(f"feature {feature_id} depends on unknown feature id: {dependency}")
+            feature_state = feature_by_id[feature_id].get("state")
+            dependency_state = feature_by_id[dependency].get("state")
+            if feature_state in {"active", "passing"} and dependency_state != "passing":
+                return fail(
+                    f"feature {feature_id} is {feature_state} but dependency {dependency} is {dependency_state}"
+                )
 
     if active_count > active_limit:
         return fail(f"active task count {active_count} exceeds active_task_limit {active_limit}")

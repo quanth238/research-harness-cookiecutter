@@ -16,6 +16,7 @@ make source-status   # after a source repo has been added
 make verify-feature ID=<TASK_ID>
 make check
 make handoff-check
+make arc-check      # when AutoResearchClaw-managed research is in scope
 ```
 
 ## Bootstrap Conditions
@@ -26,6 +27,7 @@ make handoff-check
 - Every feature has a behavior, verification command, and state.
 - `PROGRESS.md`, `DECISIONS.md`, and `session-handoff.md` exist and are current enough for a fresh session.
 - Source-specific checks are either configured or explicitly marked as not configured.
+- AutoResearchClaw-managed backend files pass `make arc-check` before ARC tasks are selected.
 
 ## Research Readiness Conditions
 
@@ -37,6 +39,8 @@ Before making empirical claims, the project must define:
 - experiment run-record format,
 - evidence artifact locations,
 - clean-state exit routine.
+
+For AutoResearchClaw-managed runs, final paper readiness also requires imported ARC metrics, imported paper artifacts, citation verification, and `make arc-paper-gate RUN_DIR=...`.
 
 ## State Transition Rule
 

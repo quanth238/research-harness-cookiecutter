@@ -18,5 +18,17 @@ for script in [
     Path("scripts/clean_session.sh"),
     Path("scripts/check_handoff.py"),
     Path("scripts/check_run_record.py"),
+    Path("scripts/arc_bootstrap.py"),
+    Path("scripts/arc_doctor.py"),
+    Path("scripts/arc_run.py"),
+    Path("scripts/codex_acp_shim.py"),
+    Path("scripts/import_arc_run.py"),
+    Path("scripts/verify_arc_run.py"),
+    Path("scripts/verify_paper_gate.py"),
+    Path("scripts/verify_research_preflight.py"),
+    Path("scripts/run_agent.py"),
+    Path("scripts/remote_wsl_exec.sh"),
+    Path("scripts/remote_wsl_doctor.sh"),
+    Path("scripts/sync_codex_auth_to_wsl.sh"),
 ]:
     chmod_executable(script)

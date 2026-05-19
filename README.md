@@ -85,6 +85,43 @@ The generated template keeps a strict harness core while leaving research method
 - strict: one active task, evidence before passing, logged verification, clean session checks,
 - flexible: source setup, metrics, data checks, experiment runners, and paper artifact workflows are project-defined.
 
+## AutoResearchClaw Managed Backend
+
+Generated projects include an optional managed AutoResearchClaw backend. The harness remains the source of truth for task state, evidence, run records, gates, multi-agent roles, and handoff; AutoResearchClaw produces candidate artifacts that must be imported as inconclusive and verified before acceptance. The default backend auth uses the existing Codex CLI login through `codex exec`, without reading `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`.
+
+```bash
+make arc-check
+make arc-bootstrap
+make arc-doctor
+make arc-run TOPIC="your research topic"
+make arc-import RUN_DIR=artifacts/arc-runs/<run_id>
+make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>
+make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>
+```
+
+`make arc-bootstrap` creates `.arc/venv` for AutoResearchClaw and `.venv` for
+ARC sandbox experiment execution.
+
+`make arc-run` first runs `make research-preflight`, which requires data
+provenance, metric fixture checks, reproduced baseline evidence, novelty/theory
+framing, and A* venue readiness. Use `make arc-run-smoke` only for
+infrastructure testing; smoke runs cannot pass final paper acceptance.
+
+For OpenAI-compatible API-key auth, use `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
+
+The final paper gate is strict: simulated experiments, missing metrics, missing run records, or missing citation verification block final paper acceptance.
+
+Generated projects also include an optional WSL/GPU runner layer for executing ARC on a remote WSL2 host while keeping harness gates local to the generated project:
+
+```bash
+make remote-wsl-doctor
+make remote-wsl-sync-auth
+make remote-wsl-arc-doctor
+make remote-wsl-run TOPIC="your research topic"
+```
+
+The auth sync command copies only Codex CLI auth files after explicit operator approval and never prints their contents.
+
 The template also includes an initialization contract, failure log, run-record schema, and CI smoke test so a fresh generated harness can prove that its basic workflow is runnable before source-specific research work starts.
 
 ## Local Validation

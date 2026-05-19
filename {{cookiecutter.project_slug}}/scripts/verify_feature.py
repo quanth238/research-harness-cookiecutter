@@ -28,6 +28,33 @@ def main() -> int:
         return 2
 
     feature = matches[0]
+    active_limit = int(data.get("active_task_limit", 1)) if isinstance(data, dict) else 1
+    active_features = [item for item in features if item.get("state") == "active"]
+    active_other = [item for item in active_features if item.get("id") != feature_id]
+    if active_other and feature.get("state") != "active":
+        active_ids = ", ".join(str(item.get("id")) for item in active_other)
+        print(
+            f"Cannot verify {feature_id}: active task limit is {active_limit} and another task is active: {active_ids}",
+            file=sys.stderr,
+        )
+        return 1
+    if len(active_features) > active_limit:
+        print(f"Cannot verify {feature_id}: active task count exceeds limit {active_limit}", file=sys.stderr)
+        return 1
+
+    feature_by_id = {item.get("id"): item for item in features}
+    unmet_dependencies = [
+        dependency
+        for dependency in feature.get("dependencies", [])
+        if feature_by_id.get(dependency, {}).get("state") != "passing"
+    ]
+    if unmet_dependencies:
+        print(
+            f"Cannot verify {feature_id}: dependencies are not passing: {', '.join(unmet_dependencies)}",
+            file=sys.stderr,
+        )
+        return 1
+
     commands = feature.get("verification")
     if not commands:
         print(f"Feature {feature_id} has no verification command", file=sys.stderr)
@@ -74,6 +101,9 @@ def main() -> int:
                     "log_path": relative_log_path,
                     "commands": results,
                 }
+                artifacts = feature.setdefault("artifacts", [])
+                if isinstance(artifacts, list) and relative_log_path not in artifacts:
+                    artifacts.append(relative_log_path)
                 feature_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
                 print(f"Verification failed for {feature_id}. Log: {relative_log_path}", file=sys.stderr)
                 return proc.returncode
@@ -86,6 +116,9 @@ def main() -> int:
         "log_path": relative_log_path,
         "commands": results,
     }
+    artifacts = feature.setdefault("artifacts", [])
+    if isinstance(artifacts, list) and relative_log_path not in artifacts:
+        artifacts.append(relative_log_path)
     feature_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     print(f"Verification passed for {feature_id}. Evidence recorded at {relative_log_path}")
     return 0
