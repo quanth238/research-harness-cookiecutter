@@ -1,0 +1,20 @@
+{
+  "run_id": "YYYYMMDDTHHMMSSZ_task_seed0",
+  "task_id": "R001",
+  "commit": "<git-commit-sha>",
+  "command": "<exact command>",
+  "config": "<config path or none>",
+  "config_hash": "<sha256 or none>",
+  "dataset": "<dataset name or none>",
+  "dataset_version": "<version or none>",
+  "split": "<train|val|test|none>",
+  "seed": 0,
+  "hardware": "<cpu/gpu/runtime notes>",
+  "started_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "ended_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "status": "planned",
+  "metrics_path": "<path to metrics.json or none>",
+  "log_path": "<path to log or none>",
+  "artifacts": [],
+  "notes": ""
+}

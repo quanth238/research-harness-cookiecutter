@@ -12,18 +12,32 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = [
     "AGENTS.md",
+    "INITIALIZATION_CONTRACT.md",
     "PROGRESS.md",
     "DECISIONS.md",
     "EVAL_PROTOCOL.md",
+    "clean-state-checklist.md",
+    "session-handoff.md",
     "feature_list.json",
     "docs/research_question.md",
     "docs/data.md",
+    "docs/metrics.md",
+    "docs/baselines.md",
     "docs/experiments.md",
+    "docs/testing.md",
+    "docs/artifacts.md",
     "docs/paper.md",
     "docs/source_repo.md",
+    "docs/failure-log.md",
+    "templates/RUN_RECORD.json",
+    "scripts/verify_feature.py",
+    "scripts/verify_feature.sh",
+    "scripts/clean_session.sh",
+    "scripts/check_handoff.py",
+    "scripts/check_run_record.py",
 ]
-ACTIVE_STATES = {"active", "in_progress"}
-VALID_STATES = {"not_started", "active", "in_progress", "passing", "verified", "blocked"}
+ACTIVE_STATES = {"active"}
+VALID_STATES = {"not_started", "active", "blocked", "passing"}
 
 
 def fail(message: str) -> int:
@@ -67,9 +81,17 @@ def main() -> int:
 
     features = data["features"]
     active_limit = int(data.get("active_task_limit", 1))
+    if active_limit != 1:
+        return fail("active_task_limit must be 1 for the default harness pattern")
+
+    allowed_states = set(data.get("allowed_states", sorted(VALID_STATES)))
+    if allowed_states != VALID_STATES:
+        return fail(f"allowed_states must be exactly {sorted(VALID_STATES)}")
+
     targets = make_targets()
     seen_ids: set[str] = set()
     active_count = 0
+    dependency_edges: dict[str, list[str]] = {}
 
     for index, feature in enumerate(features):
         if not isinstance(feature, dict):
@@ -91,6 +113,10 @@ def main() -> int:
         if not feature.get("behavior"):
             return fail(f"feature {feature_id} is missing behavior")
 
+        dependency_edges[feature_id] = feature.get("dependencies", [])
+        if not isinstance(dependency_edges[feature_id], list):
+            return fail(f"feature {feature_id} dependencies must be a list")
+
         verification = feature.get("verification")
         if not verification:
             return fail(f"feature {feature_id} is missing verification")
@@ -103,8 +129,21 @@ def main() -> int:
             if target and target not in targets:
                 return fail(f"feature {feature_id} references missing Make target: {target}")
 
+        if state == "passing" and not feature.get("evidence"):
+            return fail(f"feature {feature_id} is {state} but has no evidence")
+
+    for feature_id, dependencies in dependency_edges.items():
+        for dependency in dependencies:
+            if dependency not in seen_ids:
+                return fail(f"feature {feature_id} depends on unknown feature id: {dependency}")
+
     if active_count > active_limit:
         return fail(f"active task count {active_count} exceeds active_task_limit {active_limit}")
+
+    try:
+        json.loads((ROOT / "templates/RUN_RECORD.json").read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return fail(f"templates/RUN_RECORD.json is invalid JSON: {exc}")
 
     print("[harness-smoke] harness structure is valid")
     return 0

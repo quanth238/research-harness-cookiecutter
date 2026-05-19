@@ -8,7 +8,12 @@
 
 ## Evidence Artifacts
 
+## Commands
+
+- Startup:
+- Verification:
+- Focused debug:
+
 ## Open Risks
 
 ## Next Best Action
-

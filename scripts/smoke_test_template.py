@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -56,7 +57,15 @@ def main() -> int:
         )
         generated = tmp_path / "smoke-test-harness"
         subprocess.run(["./init.sh"], cwd=generated, check=True)
+        subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
         subprocess.run(["make", "verify-feature", "ID=R001"], cwd=generated, check=True)
+        subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
+
+        data = json.loads((generated / "feature_list.json").read_text(encoding="utf-8"))
+        r001 = next(item for item in data["features"] if item["id"] == "R001")
+        if r001.get("state") != "passing" or not r001.get("evidence"):
+            print("verify-feature did not record R001 passing evidence", file=sys.stderr)
+            return 1
 
         missing_source = subprocess.run(
             ["make", "source-status"],

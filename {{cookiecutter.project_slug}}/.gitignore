@@ -5,13 +5,16 @@ __pycache__/
 .ruff_cache/
 *.pyc
 
-# Local/large research outputs. Keep selected artifacts only when intentionally versioned.
+# Local/large research outputs. Keep lightweight manifests versioned.
 experiments/runs/
-logs/
-results/
+logs/*
+!logs/.gitkeep
+results/*
+!results/.gitkeep
+!results/manifests/
+!results/manifests/**
 artifacts/checkpoints/
 *.ckpt
 *.pth
 *.pt
 *.safetensors
-

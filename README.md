@@ -55,9 +55,11 @@ my-research-harness/
 ├── AGENTS.md
 ├── Makefile
 ├── init.sh
+├── INITIALIZATION_CONTRACT.md
 ├── feature_list.json
 ├── PROGRESS.md
 ├── DECISIONS.md
+├── EVAL_PROTOCOL.md
 ├── docs/
 ├── roles/
 ├── templates/
@@ -70,11 +72,20 @@ my-research-harness/
     └── <source_repo_name>/
 ```
 
+`roles/` and report templates are optional aids for larger projects; the default workflow only requires the feature list, verification commands, progress notes, and handoff checks.
+
 ## Core Principle
 
 Do not ask the agent to "work on the research project."
 
 Ask it to execute one task from `feature_list.json`, using the relevant docs, with verification commands and evidence artifacts recorded in the repo.
+
+The generated template keeps a strict harness core while leaving research methods flexible:
+
+- strict: one active task, evidence before passing, logged verification, clean session checks,
+- flexible: source setup, metrics, data checks, experiment runners, and paper artifact workflows are project-defined.
+
+The template also includes an initialization contract, failure log, run-record schema, and CI smoke test so a fresh generated harness can prove that its basic workflow is runnable before source-specific research work starts.
 
 ## Local Validation
 

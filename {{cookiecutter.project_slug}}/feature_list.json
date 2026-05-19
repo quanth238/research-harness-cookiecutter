@@ -1,25 +1,53 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "active_task_limit": 1,
+  "allowed_states": ["not_started", "active", "blocked", "passing"],
+  "rules": {
+    "single_active_task": true,
+    "passing_requires_evidence": true,
+    "verification_required_before_claim": true
+  },
   "features": [
     {
       "id": "R001",
+      "priority": 1,
       "state": "not_started",
       "claim_status": "speculative",
       "task_family": "reproducibility",
+      "area": "harness",
+      "title": "Verify generated harness structure",
       "behavior": "A fresh generated harness can run structural smoke checks without hidden manual steps.",
       "verification": ["make smoke"],
       "evidence": null,
+      "artifacts": [],
       "dependencies": []
     },
     {
       "id": "R002",
+      "priority": 2,
       "state": "not_started",
       "claim_status": "speculative",
       "task_family": "source_setup",
+      "area": "source",
+      "title": "Install wrapped source repository",
       "behavior": "The wrapped source repository exists under src/{{ cookiecutter.source_repo_name }} and has a configured smoke command.",
       "verification": ["make source-status", "make source-smoke"],
       "evidence": null,
+      "artifacts": [],
+      "dependencies": ["R001"]
+    },
+    {
+      "id": "R003",
+      "priority": 3,
+      "state": "not_started",
+      "claim_status": "speculative",
+      "task_family": "research_protocol",
+      "area": "protocol",
+      "title": "Define research protocol",
+      "behavior": "The project defines a falsifiable research question, data protocol, metrics protocol, and baseline/comparison protocol.",
+      "verification": ["make verify-protocol"],
+      "evidence": null,
+      "artifacts": [],
       "dependencies": ["R001"]
     }
   ]

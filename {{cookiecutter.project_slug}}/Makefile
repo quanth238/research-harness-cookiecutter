@@ -1,10 +1,11 @@
 SRC_DIR ?= src/{{ cookiecutter.source_repo_name }}
 PYTHON ?= {{ cookiecutter.python_command }}
 
-.PHONY: setup smoke test check verify-feature clean-session source-status source-smoke verify-data verify-metric verify-one-scene verify-figure
+.PHONY: setup smoke test check verify-feature clean-session source-status source-smoke \
+	verify-protocol verify-data verify-metric verify-one-scene verify-figure handoff-check check-run-record
 
 setup:
-	@mkdir -p work experiments logs results tests docs roles templates scripts configs evals artifacts/figures artifacts/tables paper src
+	@mkdir -p work/verification_logs experiments/manifests experiments/runs logs/verification results/manifests tests docs roles templates scripts configs evals artifacts/figures artifacts/tables artifacts/checkpoints paper src
 	@echo "Harness directories ready."
 
 smoke:
@@ -14,11 +15,18 @@ test:
 	@$(PYTHON) scripts/validate_harness.py
 
 check: smoke test
-	@echo "Harness checks passed. Add source-specific checks as the project matures."
+	@echo "Normal harness verification gate passed. Add source-specific checks as the project matures."
 
 verify-feature:
 	@test -n "$(ID)" || (echo "Usage: make verify-feature ID=R001" && exit 2)
-	@bash scripts/verify_feature.sh "$(ID)"
+	@$(PYTHON) scripts/verify_feature.py "$(ID)"
+
+handoff-check:
+	@$(PYTHON) scripts/check_handoff.py
+
+check-run-record:
+	@test -n "$(FILE)" || (echo "Usage: make check-run-record FILE=experiments/manifests/<run_id>.json" && exit 2)
+	@$(PYTHON) scripts/check_run_record.py "$(FILE)"
 
 source-status:
 	@test -d "$(SRC_DIR)" || (echo "Missing SRC_DIR=$(SRC_DIR). Clone or copy your source repo there." && exit 2)
@@ -32,6 +40,9 @@ source-status:
 source-smoke:
 	@test -d "$(SRC_DIR)" || (echo "Missing SRC_DIR=$(SRC_DIR)" && exit 2)
 	@echo "source-smoke is not configured. Replace this target with a source-repo-specific smoke command before verifying source tasks." && exit 2
+
+verify-protocol:
+	@echo "verify-protocol is not configured. Replace this target with checks for research question, data, metric, and baseline protocol completeness." && exit 2
 
 verify-data:
 	@echo "verify-data is not configured. Replace this target with dataset manifest, checksum, and split checks." && exit 2

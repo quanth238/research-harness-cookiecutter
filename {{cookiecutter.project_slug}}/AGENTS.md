@@ -3,6 +3,8 @@
 ## Project
 {{ cookiecutter.research_goal }}
 
+This repository is an empirical research harness. The agent's job is not to work on the project broadly; it must execute one bounded task from `feature_list.json`, verify it, record evidence, and leave a clean handoff.
+
 ## Source Repository
 - Primary source path: `src/{{ cookiecutter.source_repo_name }}`
 - Upstream URL: `{{ cookiecutter.upstream_repo_url }}`
@@ -10,37 +12,62 @@
 - Keep harness files at the workspace root unless a task explicitly asks to modify the source repository itself.
 
 ## Start Every Session
-1. Read `AGENTS.md`.
-2. Read `PROGRESS.md` and `DECISIONS.md`.
-3. Inspect `feature_list.json`.
-4. Run `./init.sh` or `make smoke`.
-5. Inspect source repo status with `make source-status`.
-6. Work on exactly one active task unless the human explicitly changes scope.
+1. Read `AGENTS.md` and `INITIALIZATION_CONTRACT.md`.
+2. Read `PROGRESS.md`, `DECISIONS.md`, and `feature_list.json`.
+3. Run `./init.sh` or `make smoke`.
+4. Inspect source repo status with `make source-status` when source work is in scope.
+5. Select exactly one task with state `active` or `not_started`.
+6. Read the topic docs relevant to that task before editing files.
+
+## Task State Rules
+- Allowed task states: `not_started`, `active`, `blocked`, `passing`.
+- At most one task may be `active` at a time.
+- Do not start another task while one task is `active`.
+- Do not manually mark a task `passing`.
+- To verify a task, run `make verify-feature ID=<TASK_ID>`.
+- If verification passes, the verification script records evidence and updates task state.
+- If verification fails, keep the task `active` or mark it `blocked` with a concrete reason.
 
 ## Hard Constraints
 - Do not change dataset splits, evaluation metrics, or reported baseline numbers without recording the reason in `DECISIONS.md`.
-- Do not claim an experiment result unless the command, config, seed, logs, and output artifact are recorded.
-- Do not mark a task complete manually. Completion requires the registered verification command to pass.
+- Do not claim an experiment result unless the command, config, seed, logs, metric file, and output artifact are recorded.
+- Do not compare results unless the metric definition, dataset split, and aggregation rule are compatible.
 - Prefer cheap proxy validation before expensive GPU training, rendering, or robotics simulation.
 - Keep implementation changes separate from paper-writing and result-interpretation changes unless the task explicitly combines them.
+- Record negative results and failed runs; do not hide them by only reporting successful runs.
 
 ## Commands
-- `make setup` prepares the environment.
+- `make setup` prepares harness directories.
 - `make smoke` runs cheap checks that should finish quickly.
-- `make test` runs local tests.
-- `make check` runs the normal verification gate.
-- `make verify-feature ID=R001` runs the verification command registered for one feature.
+- `make test` runs local harness tests.
+- `make check` runs the normal harness verification gate.
+- `make verify-feature ID=R001` runs the verification commands registered for one feature and records evidence.
 - `make source-status` checks the wrapped source repository status.
+- `make handoff-check` validates end-of-session continuity artifacts.
+- `make check-run-record FILE=...` validates a research run manifest.
+- `make clean-session` performs the end-of-session cleanup routine.
+- Research-specific placeholder targets such as `make verify-protocol`, `make source-smoke`, `make verify-data`, `make verify-metric`, `make verify-one-scene`, and `make verify-figure` must be replaced before their tasks can pass.
 
 ## Topic Docs
 - Read `docs/research_question.md` before changing the hypothesis, method, or claims.
 - Read `docs/data.md` before touching datasets, preprocessing, labels, splits, or calibration.
+- Read `docs/metrics.md` before changing metrics, aggregation, or claim comparisons.
+- Read `docs/baselines.md` before changing or evaluating baselines.
 - Read `docs/experiments.md` before changing training, evaluation, sweeps, logging, or seeds.
+- Read `docs/testing.md` before adding or changing verification commands.
+- Read `docs/artifacts.md` before writing logs, run manifests, figures, tables, checkpoints, or submissions.
 - Read `docs/paper.md` before changing figures, tables, text, or result claims.
 - Read `docs/source_repo.md` before changing or wrapping upstream source code.
+- Read `docs/failure-log.md` before repeating a failed experiment family.
 
-## Role Protocol
-- Planner writes `work/TASK_SPEC.md` and does not edit implementation code.
-- Generator implements only the approved task and writes `work/IMPLEMENTATION_REPORT.md`.
-- Evaluator independently checks the diff, logs, outputs, and rubric, then writes `work/EVALUATION_REPORT.md`.
+## Optional Reports
+- For simple tasks, update `feature_list.json`, `PROGRESS.md`, and `session-handoff.md`.
+- For larger tasks, use the templates in `templates/` to write a task spec, implementation report, or evaluation report under `work/`.
 
+## Session Exit
+Before ending a session:
+1. Run the relevant verification command or document why it could not run.
+2. Update `PROGRESS.md` with commands, outcomes, evidence paths, and next action.
+3. Update `DECISIONS.md` if any research assumption changed.
+4. Update `docs/failure-log.md` for failed, negative, or unstable runs.
+5. Run `make clean-session`.

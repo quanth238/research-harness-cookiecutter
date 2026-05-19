@@ -14,7 +14,9 @@ if "{{ cookiecutter.include_claude_md }}" == "no":
 for script in [
     Path("init.sh"),
     Path("scripts/verify_feature.sh"),
+    Path("scripts/verify_feature.py"),
     Path("scripts/clean_session.sh"),
+    Path("scripts/check_handoff.py"),
+    Path("scripts/check_run_record.py"),
 ]:
     chmod_executable(script)
-

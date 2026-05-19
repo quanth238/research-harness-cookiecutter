@@ -19,3 +19,8 @@
 ## Verification Commands
 - `make verify-data`
 
+## Evidence
+- Data manifest path:
+- Split manifest path:
+- Preprocessing config path:
+- Last verification log:
