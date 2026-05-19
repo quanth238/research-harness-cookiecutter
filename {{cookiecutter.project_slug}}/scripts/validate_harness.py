@@ -92,6 +92,7 @@ def main() -> int:
     seen_ids: set[str] = set()
     active_count = 0
     dependency_edges: dict[str, list[str]] = {}
+    feature_by_id: dict[str, dict[str, object]] = {}
 
     for index, feature in enumerate(features):
         if not isinstance(feature, dict):
@@ -103,6 +104,7 @@ def main() -> int:
         if feature_id in seen_ids:
             return fail(f"duplicate feature id: {feature_id}")
         seen_ids.add(feature_id)
+        feature_by_id[feature_id] = feature
 
         state = feature.get("state")
         if state not in VALID_STATES:
@@ -136,6 +138,12 @@ def main() -> int:
         for dependency in dependencies:
             if dependency not in seen_ids:
                 return fail(f"feature {feature_id} depends on unknown feature id: {dependency}")
+            feature_state = feature_by_id[feature_id].get("state")
+            dependency_state = feature_by_id[dependency].get("state")
+            if feature_state in {"active", "passing"} and dependency_state != "passing":
+                return fail(
+                    f"feature {feature_id} is {feature_state} but dependency {dependency} is {dependency_state}"
+                )
 
     if active_count > active_limit:
         return fail(f"active task count {active_count} exceeds active_task_limit {active_limit}")

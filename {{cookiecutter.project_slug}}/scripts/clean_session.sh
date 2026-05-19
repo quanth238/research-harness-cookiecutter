@@ -5,6 +5,7 @@ mkdir -p work/verification_logs experiments/manifests experiments/runs logs/veri
 find . -name ".DS_Store" -delete
 
 {{ cookiecutter.python_command }} scripts/validate_harness.py
+{{ cookiecutter.python_command }} scripts/check_handoff.py
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "[clean-session] harness git status:"
@@ -16,5 +17,5 @@ echo "  - PROGRESS.md updated with commands, evidence, and next action"
 echo "  - DECISIONS.md updated if research assumptions changed"
 echo "  - docs/failure-log.md updated for failed, negative, or unstable runs"
 echo "  - feature_list.json state matches actual verification evidence"
-echo "  - make handoff-check passes or the remaining gap is documented"
+echo "  - make handoff-check has passed"
 echo "Session cleanup complete."

@@ -35,6 +35,60 @@ def cookiecutter_command() -> list[str] | None:
     return None
 
 
+def refresh_handoff_files(generated: Path, log_path: str) -> None:
+    (generated / "session-handoff.md").write_text(
+        f"""# Session Handoff
+
+## Current Task
+No active task. R001 is verified.
+
+## What Changed
+Generated harness template was initialized and structurally verified.
+
+## Verification
+R001 passed with `make verify-feature ID=R001`.
+
+## Evidence Artifacts
+- `{log_path}`
+
+## Commands
+
+- Startup: `./init.sh`
+- Verification: `make verify-feature ID=R001`
+- Focused debug: none
+
+## Open Risks
+Source repository and research-specific checks are not configured yet.
+
+## Next Best Action
+Clone or copy the source repository into `src/source`, then replace placeholder verification targets with project-specific checks.
+""",
+        encoding="utf-8",
+    )
+    (generated / "PROGRESS.md").write_text(
+        f"""# Progress
+
+## Current State
+- Active task: none
+- Last verified feature: R001
+- Current blocker: none
+- Source path: `src/source`
+
+## Session Log
+| Date | Role | Task | Commands run | Result | Next action |
+|---|---|---|---|---|---|
+| smoke-test | harness | R001 | `./init.sh`, `make verify-feature ID=R001` | passed; evidence `{log_path}` | clone or copy source repo into `src/source` |
+
+## Next Atomic Actions
+1. Clone or copy the source repo into `src/source`.
+2. Fill `docs/research_question.md`.
+3. Replace placeholder commands in `Makefile`.
+4. Rewrite `feature_list.json` with real research tasks.
+""",
+        encoding="utf-8",
+    )
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     cookiecutter = cookiecutter_command()
@@ -59,13 +113,30 @@ def main() -> int:
         subprocess.run(["./init.sh"], cwd=generated, check=True)
         subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
         subprocess.run(["make", "verify-feature", "ID=R001"], cwd=generated, check=True)
-        subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
 
         data = json.loads((generated / "feature_list.json").read_text(encoding="utf-8"))
         r001 = next(item for item in data["features"] if item["id"] == "R001")
         if r001.get("state") != "passing" or not r001.get("evidence"):
             print("verify-feature did not record R001 passing evidence", file=sys.stderr)
             return 1
+        log_path = r001["evidence"].get("log_path")
+        if log_path not in r001.get("artifacts", []):
+            print("verify-feature did not record the verification log as a task artifact", file=sys.stderr)
+            return 1
+
+        stale_handoff = subprocess.run(
+            ["make", "handoff-check"],
+            cwd=generated,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if stale_handoff.returncode == 0:
+            print("handoff-check unexpectedly passed after verification with stale handoff files", file=sys.stderr)
+            return 1
+
+        refresh_handoff_files(generated, log_path)
+        subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
+        subprocess.run(["make", "clean-session"], cwd=generated, check=True)
 
         missing_source = subprocess.run(
             ["make", "source-status"],
