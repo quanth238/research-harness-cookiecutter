@@ -133,6 +133,20 @@
       "evidence": null,
       "artifacts": [],
       "dependencies": ["ARC004", "ARC005"]
+    },
+    {
+      "id": "ARC007",
+      "priority": 16,
+      "state": "not_started",
+      "claim_status": "speculative",
+      "task_family": "remote_wsl_runner",
+      "area": "backend",
+      "title": "Validate remote WSL ARC runner",
+      "behavior": "The configured WSL runner exposes Git, Python, Node/npm, Codex auth, GPU visibility, and enough disk for ARC execution.",
+      "verification": ["make remote-wsl-doctor"],
+      "evidence": null,
+      "artifacts": [],
+      "dependencies": ["ARC001"]
     }
   ]
 }

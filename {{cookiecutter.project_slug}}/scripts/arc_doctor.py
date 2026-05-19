@@ -18,6 +18,7 @@ STATIC_FILES = [
     "configs/researchclaw.codex.yaml",
     "configs/researchclaw.openai.yaml",
     "docs/auto_research.md",
+    "docs/remote_wsl.md",
     "agents/agents.yaml",
     "templates/AGENT_BRIEF.md",
     "templates/AGENT_RESULT.md",
@@ -29,6 +30,9 @@ STATIC_FILES = [
     "scripts/verify_arc_run.py",
     "scripts/verify_paper_gate.py",
     "scripts/run_agent.py",
+    "scripts/remote_wsl_exec.sh",
+    "scripts/remote_wsl_doctor.sh",
+    "scripts/sync_codex_auth_to_wsl.sh",
 ]
 
 

@@ -52,6 +52,9 @@ This repository is an empirical research harness. The agent's job is not to work
 - `make arc-run TOPIC="..."` runs AutoResearchClaw under harness-controlled output paths.
 - `make arc-import RUN_DIR=...`, `make arc-verify RUN_DIR=...`, and `make arc-paper-gate RUN_DIR=...` import and gate ARC outputs.
 - `make agent-run ROLE=... TASK=...` launches a bounded Codex CLI worker using file-based handoff.
+- `make remote-wsl-doctor` checks the configured WSL/GPU runner without mutating it.
+- `make remote-wsl-sync-auth` explicitly syncs local Codex CLI auth files into WSL when the operator has approved it.
+- `make remote-wsl-arc-doctor`, `make remote-wsl-bootstrap`, `make remote-wsl-run`, `make remote-wsl-import`, `make remote-wsl-verify`, and `make remote-wsl-paper-gate` dispatch ARC work to the configured WSL project root.
 - `make clean-session` performs the end-of-session cleanup routine.
 - Research-specific placeholder targets such as `make verify-protocol`, `make source-smoke`, `make verify-data`, `make verify-metric`, `make verify-one-scene`, and `make verify-figure` must be replaced before their tasks can pass.
 
@@ -67,6 +70,7 @@ This repository is an empirical research harness. The agent's job is not to work
 - Read `docs/source_repo.md` before changing or wrapping upstream source code.
 - Read `docs/failure-log.md` before repeating a failed experiment family.
 - Read `docs/auto_research.md` before running or accepting AutoResearchClaw-managed outputs.
+- Read `docs/remote_wsl.md` before dispatching ARC work to WSL.
 
 ## AutoResearchClaw Managed Backend
 - Treat AutoResearchClaw as an optional backend, not the source of truth.
@@ -76,6 +80,7 @@ This repository is an empirical research harness. The agent's job is not to work
 - Raw ARC runs live under `artifacts/arc-runs/` and remain unaccepted until imported and verified.
 - A final paper requires `make arc-paper-gate RUN_DIR=...`; draft paper files alone are not sufficient.
 - The ARC Codex backend is read-only text generation. Codex worker agents may write outputs under `work/agent_outbox/`, but only verification scripts may mark work passing.
+- WSL/GPU is an execution target only. Remote ARC outputs still require the same import, verify, and paper-gate checks.
 
 ## Optional Reports
 - For simple tasks, update `feature_list.json`, `PROGRESS.md`, and `session-handoff.md`.

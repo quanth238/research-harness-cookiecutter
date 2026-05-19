@@ -312,6 +312,15 @@ def main() -> int:
         subprocess.run(["make", "handoff-check"], cwd=generated, check=True)
         subprocess.run(["make", "verify-feature", "ID=R001"], cwd=generated, check=True)
         subprocess.run(["make", "arc-check"], cwd=generated, check=True)
+        for script in [
+            "scripts/remote_wsl_exec.sh",
+            "scripts/remote_wsl_doctor.sh",
+            "scripts/sync_codex_auth_to_wsl.sh",
+        ]:
+            subprocess.run(["bash", "-n", script], cwd=generated, check=True)
+            if not os.access(generated / script, os.X_OK):
+                print(f"{script} is not executable after generation", file=sys.stderr)
+                return 1
         subprocess.run(["make", "arc-doctor", "ARC_AUTH=codex"], cwd=generated, env=fake_env, check=True)
         openai_doctor = subprocess.run(
             ["make", "arc-doctor", "ARC_AUTH=openai", "ARC_CONFIG=configs/researchclaw.openai.yaml"],

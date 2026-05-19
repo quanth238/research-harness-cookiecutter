@@ -11,10 +11,16 @@ ARC_RUN_ROOT ?= artifacts/arc-runs
 CODEX_CLI ?= codex
 CODEX_MODEL ?= gpt-5.5
 CODEX_REASONING_EFFORT ?= xhigh
+REMOTE_SSH ?= {{ cookiecutter.remote_wsl_ssh_host }}
+WSL_DISTRO ?= {{ cookiecutter.remote_wsl_distro }}
+REMOTE_ROOT ?= {{ cookiecutter.remote_wsl_root }}
+REMOTE_ARC_PYTHON ?= python3
 
 .PHONY: setup smoke test check verify-feature clean-session source-status source-smoke \
 	verify-protocol verify-data verify-metric verify-one-scene verify-figure handoff-check check-run-record \
-	arc-bootstrap arc-doctor arc-doctor-live arc-check arc-run arc-resume arc-import arc-verify arc-paper-gate agent-run
+	arc-bootstrap arc-doctor arc-doctor-live arc-check arc-run arc-resume arc-import arc-verify arc-paper-gate agent-run \
+	remote-wsl-doctor remote-wsl-sync-auth remote-wsl-arc-doctor remote-wsl-bootstrap remote-wsl-run \
+	remote-wsl-import remote-wsl-verify remote-wsl-paper-gate
 
 setup:
 	@mkdir -p work/verification_logs work/agent_runs work/agent_inbox work/agent_outbox work/locks experiments/manifests experiments/runs logs/verification results/manifests tests docs/kb/questions docs/kb/literature docs/kb/experiments docs/kb/findings docs/kb/decisions docs/kb/reviews roles templates scripts configs evals artifacts/figures artifacts/tables artifacts/checkpoints artifacts/arc-runs paper src external .arc agents
@@ -76,6 +82,35 @@ agent-run:
 	@test -n "$(ROLE)" || (echo "Usage: make agent-run ROLE=literature TASK=ARC-LIT-001" && exit 2)
 	@test -n "$(TASK)" || (echo "Usage: make agent-run ROLE=literature TASK=ARC-LIT-001" && exit 2)
 	@$(PYTHON) scripts/run_agent.py --role "$(ROLE)" --task "$(TASK)" --codex-cli "$(CODEX_CLI)" --codex-model "$(CODEX_MODEL)" --codex-reasoning-effort "$(CODEX_REASONING_EFFORT)"
+
+remote-wsl-doctor:
+	@scripts/remote_wsl_doctor.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)"
+
+remote-wsl-sync-auth:
+	@scripts/sync_codex_auth_to_wsl.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)"
+
+remote-wsl-arc-doctor:
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-check ARC_PYTHON="$(REMOTE_ARC_PYTHON)"
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-doctor-live ARC_PYTHON="$(REMOTE_ARC_PYTHON)"
+
+remote-wsl-bootstrap:
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-bootstrap ARC_PYTHON="$(REMOTE_ARC_PYTHON)"
+
+remote-wsl-run:
+	@test -n "$(TOPIC)" || (echo "Usage: make remote-wsl-run TOPIC=\"research topic\"" && exit 2)
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-run ARC_PYTHON="$(REMOTE_ARC_PYTHON)" TOPIC="$(TOPIC)"
+
+remote-wsl-import:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make remote-wsl-import RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-import ARC_PYTHON="$(REMOTE_ARC_PYTHON)" RUN_DIR="$(RUN_DIR)"
+
+remote-wsl-verify:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make remote-wsl-verify RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-verify ARC_PYTHON="$(REMOTE_ARC_PYTHON)" RUN_DIR="$(RUN_DIR)"
+
+remote-wsl-paper-gate:
+	@test -n "$(RUN_DIR)" || (echo "Usage: make remote-wsl-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-paper-gate ARC_PYTHON="$(REMOTE_ARC_PYTHON)" RUN_DIR="$(RUN_DIR)"
 
 source-status:
 	@test -d "$(SRC_DIR)" || (echo "Missing SRC_DIR=$(SRC_DIR). Clone or copy your source repo there." && exit 2)

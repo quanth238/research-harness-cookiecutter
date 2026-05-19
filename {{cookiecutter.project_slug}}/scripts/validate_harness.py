@@ -30,6 +30,7 @@ REQUIRED_FILES = [
     "docs/source_repo.md",
     "docs/failure-log.md",
     "docs/auto_research.md",
+    "docs/remote_wsl.md",
     "configs/researchclaw.yaml",
     "configs/researchclaw.codex.yaml",
     "configs/researchclaw.openai.yaml",
@@ -50,6 +51,9 @@ REQUIRED_FILES = [
     "scripts/verify_arc_run.py",
     "scripts/verify_paper_gate.py",
     "scripts/run_agent.py",
+    "scripts/remote_wsl_exec.sh",
+    "scripts/remote_wsl_doctor.sh",
+    "scripts/sync_codex_auth_to_wsl.sh",
 ]
 ACTIVE_STATES = {"active"}
 VALID_STATES = {"not_started", "active", "blocked", "passing"}

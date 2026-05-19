@@ -8,6 +8,9 @@
   "arc_python_command": "python3.11",
   "autoresearchclaw_repo_url": "https://github.com/aiming-lab/AutoResearchClaw.git",
   "autoresearchclaw_ref": "84dad0a401404739cfcc47851cd1d282b671bb2f",
+  "remote_wsl_ssh_host": "Admin@desktop-a4ko83o.tail7cb6d9.ts.net",
+  "remote_wsl_distro": "Ubuntu-24.04",
+  "remote_wsl_root": "/home/quan238/code_space/{{ cookiecutter.project_slug }}",
   "include_claude_md": ["no", "yes"],
   "author_name": "Research Harness Contributors"
 }
