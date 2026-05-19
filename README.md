@@ -87,7 +87,7 @@ The generated template keeps a strict harness core while leaving research method
 
 ## AutoResearchClaw Managed Backend
 
-Generated projects include an optional managed AutoResearchClaw backend. The harness remains the source of truth for task state, evidence, run records, gates, multi-agent roles, and handoff; AutoResearchClaw produces candidate artifacts that must be imported and verified. The default backend auth uses the existing Codex CLI login through `codex exec`, without reading `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`.
+Generated projects include an optional managed AutoResearchClaw backend. The harness remains the source of truth for task state, evidence, run records, gates, multi-agent roles, and handoff; AutoResearchClaw produces candidate artifacts that must be imported as inconclusive and verified before acceptance. The default backend auth uses the existing Codex CLI login through `codex exec`, without reading `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`.
 
 ```bash
 make arc-check

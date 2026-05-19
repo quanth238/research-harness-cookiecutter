@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import shutil
@@ -64,17 +65,20 @@ def git_commit() -> str:
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("Usage: scripts/import_arc_run.py artifacts/arc-runs/<run_id>", file=sys.stderr)
-        return 2
+    parser = argparse.ArgumentParser()
+    parser.add_argument("run_dir")
+    parser.add_argument("--config", default="configs/researchclaw.codex.yaml")
+    args = parser.parse_args()
 
-    run_dir = (ROOT / sys.argv[1]).resolve()
+    run_dir = (ROOT / args.run_dir).resolve()
     if not run_dir.exists():
         return fail(f"missing run directory: {run_dir}")
 
     run_id = run_dir.name
     summary = load_json(run_dir / "pipeline_summary.json")
-    config_path = ROOT / "configs" / "researchclaw.yaml"
+    config_path = ROOT / args.config
+    if not config_path.exists():
+        return fail(f"missing config: {config_path}")
     imported_dir = ROOT / "results" / "manifests" / run_id
     paper_dir = ROOT / "paper" / run_id
     imported_dir.mkdir(parents=True, exist_ok=True)
@@ -112,8 +116,8 @@ def main() -> int:
         "task_id": "ARC-RUN",
         "commit": git_commit(),
         "command": f"make arc-run/import RUN_DIR={relative(run_dir)}",
-        "config": "configs/researchclaw.yaml",
-        "config_hash": sha256_file(config_path) if config_path.exists() else "none",
+        "config": args.config,
+        "config_hash": sha256_file(config_path),
         "dataset": "arc-managed",
         "dataset_version": "none",
         "split": "none",
@@ -121,11 +125,11 @@ def main() -> int:
         "hardware": "see AutoResearchClaw hardware profile if present",
         "started_at": summary.get("generated", now),
         "ended_at": now,
-        "status": "passed",
+        "status": "inconclusive",
         "metrics_path": metrics_path if (ROOT / metrics_path).exists() else "none",
         "log_path": log_path if (ROOT / log_path).exists() else "none",
         "artifacts": copied,
-        "notes": "Imported from AutoResearchClaw managed backend; final acceptance requires arc-paper-gate.",
+        "notes": "Imported from AutoResearchClaw managed backend; not accepted until arc-verify and arc-paper-gate pass.",
     }
     manifest_path = ROOT / "experiments" / "manifests" / f"{run_id}.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

@@ -69,7 +69,7 @@ Research-specific checks remain flexible. Replace placeholder targets such as `s
 
 A result is not accepted because it looks plausible. It is accepted only when the command, config, seed, log, metric file, artifact path, and verification result are recorded in repo artifacts.
 
-For AutoResearchClaw-managed runs, `make arc-paper-gate RUN_DIR=...` must pass before the final paper can be treated as accepted evidence.
+For AutoResearchClaw-managed runs, `make arc-import RUN_DIR=...` records candidate output as inconclusive, and `make arc-paper-gate RUN_DIR=...` must pass before the final paper can be treated as accepted evidence.
 
 The default ARC auth mode is `ARC_AUTH=codex`, which uses the existing Codex CLI login through `codex exec`. The harness never reads `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`; override those Make variables if your account or environment needs a different model. To use API-key auth instead, set `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
 

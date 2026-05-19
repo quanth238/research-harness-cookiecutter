@@ -62,7 +62,7 @@ arc-resume:
 
 arc-import:
 	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-import RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
-	@$(PYTHON) scripts/import_arc_run.py "$(RUN_DIR)"
+	@$(PYTHON) scripts/import_arc_run.py "$(RUN_DIR)" --config "$(ARC_CONFIG)"
 
 arc-verify:
 	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
@@ -70,7 +70,7 @@ arc-verify:
 
 arc-paper-gate:
 	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
-	@$(PYTHON) scripts/verify_paper_gate.py "$(RUN_DIR)"
+	@$(PYTHON) scripts/verify_paper_gate.py "$(RUN_DIR)" --config "$(ARC_CONFIG)"
 
 agent-run:
 	@test -n "$(ROLE)" || (echo "Usage: make agent-run ROLE=literature TASK=ARC-LIT-001" && exit 2)

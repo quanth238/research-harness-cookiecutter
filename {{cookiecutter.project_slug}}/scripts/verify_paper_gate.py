@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -47,11 +48,12 @@ def has_metric_content(data: dict[str, Any]) -> bool:
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("Usage: scripts/verify_paper_gate.py artifacts/arc-runs/<run_id>", file=sys.stderr)
-        return 2
+    parser = argparse.ArgumentParser()
+    parser.add_argument("run_dir")
+    parser.add_argument("--config", default="configs/researchclaw.codex.yaml")
+    args = parser.parse_args()
 
-    run_dir = (ROOT / sys.argv[1]).resolve()
+    run_dir = (ROOT / args.run_dir).resolve()
     if not run_dir.exists():
         return fail(f"missing run directory: {run_dir}")
 
@@ -61,11 +63,12 @@ def main() -> int:
             print(f"[arc-paper-gate] {error}", file=sys.stderr)
         return 1
 
-    mode = config_experiment_mode(ROOT / "configs" / "researchclaw.yaml")
+    config_path = ROOT / args.config
+    mode = config_experiment_mode(config_path)
     if mode == "simulated":
         return fail("experiment.mode is simulated; final paper claims require real experiment execution")
     if not mode:
-        return fail("could not determine experiment.mode from configs/researchclaw.yaml")
+        return fail(f"could not determine experiment.mode from {args.config}")
 
     experiment_summary = load_json(run_dir / "stage-14" / "experiment_summary.json")
     if experiment_summary is None or not has_metric_content(experiment_summary):
@@ -94,6 +97,7 @@ def main() -> int:
                 "run_id": run_dir.name,
                 "status": "passed",
                 "experiment_mode": mode,
+                "config": args.config,
                 "paper": paper.relative_to(ROOT).as_posix(),
                 "manifest": manifest.relative_to(ROOT).as_posix(),
                 "citation_status": reason,

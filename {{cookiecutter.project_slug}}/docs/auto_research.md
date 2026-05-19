@@ -41,6 +41,6 @@ make arc-run ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml TOPIC="
 
 ## Paper Acceptance
 
-A draft paper is not a final result. `make arc-paper-gate RUN_DIR=...` must pass before the paper can be treated as an accepted research artifact. The gate rejects simulated experiments, missing metrics, missing citation reports, missing run records, and unverified citation summaries.
+A draft paper is not a final result. `make arc-import RUN_DIR=...` records an imported run as inconclusive; `make arc-paper-gate RUN_DIR=...` must pass before the paper can be treated as an accepted research artifact. The gate rejects simulated experiments, missing metrics, missing citation reports, missing run records, and unverified citation summaries.
 
 The Codex backend used by AutoResearchClaw is text-generation only and runs Codex in a read-only sandbox. Codex role workers launched with `make agent-run` are separate and may edit assigned files under the normal harness task controls.

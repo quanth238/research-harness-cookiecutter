@@ -151,7 +151,7 @@ def create_fake_arc_run(
 
 
 def set_arc_experiment_mode(generated: Path, mode: str) -> None:
-    path = generated / "configs" / "researchclaw.yaml"
+    path = generated / "configs" / "researchclaw.codex.yaml"
     lines = path.read_text(encoding="utf-8").splitlines()
     out: list[str] = []
     in_experiment = False
@@ -170,7 +170,7 @@ def set_arc_experiment_mode(generated: Path, mode: str) -> None:
         else:
             out.append(raw)
     if not changed:
-        raise RuntimeError("could not update experiment.mode in generated ARC config")
+        raise RuntimeError("could not update experiment.mode in generated ARC Codex config")
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
@@ -386,6 +386,15 @@ def main() -> int:
             cwd=generated,
             check=True,
         )
+        imported_manifest = json.loads(
+            (generated / "experiments" / "manifests" / "fake-arc-run.json").read_text(encoding="utf-8")
+        )
+        if imported_manifest.get("status") == "passed":
+            print("arc-import marked raw ARC output passed before paper gate", file=sys.stderr)
+            return 1
+        if imported_manifest.get("config") != "configs/researchclaw.codex.yaml":
+            print("arc-import did not record the selected Codex ARC config", file=sys.stderr)
+            return 1
 
         missing_citation = create_fake_arc_run(generated, "fake-missing-citation", missing_citation=True)
         rel_missing_citation = missing_citation.relative_to(generated).as_posix()
