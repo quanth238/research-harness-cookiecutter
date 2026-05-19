@@ -1,20 +1,20 @@
 # Metrics Protocol
 
 ## Primary Metric
-- Name:
-- Direction: higher is better / lower is better
-- Script:
-- Aggregation rule:
-- Required splits:
+- Name: <metric name>
+- Direction: <higher is better|lower is better|maximize|minimize>
+- Script: <path>
+- Aggregation rule: <aggregation rule>
+- Required splits: <splits>
 
 ## Secondary Metrics
 | Metric | Purpose | Script | Aggregation |
 |---|---|---|---|
 
 ## Known-Answer Checks
-- Fixture:
-- Expected output:
-- Verification command: `make verify-metric`
+- Fixture: <path>
+- Expected output: <expected output>
+- Verification command: <command that exits 0 only when fixture passes>
 
 ## Claim Rules
 - Do not claim an improvement unless baseline and candidate metrics use the same dataset version, split, preprocessing, and aggregation rule.

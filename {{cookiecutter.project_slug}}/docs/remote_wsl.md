@@ -88,6 +88,15 @@ Run ARC in WSL:
 make remote-wsl-run TOPIC="your research topic"
 ```
 
+This dispatches the normal `make arc-run` target inside WSL, so it also runs
+`make research-preflight` first. For infrastructure-only checks, use:
+
+```bash
+make remote-wsl-run-smoke TOPIC="small ARC infrastructure smoke topic"
+```
+
+Smoke runs are marked non-paper and cannot pass the final paper gate.
+
 Then gate the run, still inside WSL:
 
 ```bash

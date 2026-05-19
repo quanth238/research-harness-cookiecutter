@@ -96,11 +96,25 @@ def create_fake_arc_run(
     *,
     missing_citation: bool = False,
     missing_metrics: bool = False,
+    smoke: bool = False,
 ) -> Path:
     run_dir = generated / "artifacts" / "arc-runs" / run_id
     (run_dir / "stage-14").mkdir(parents=True, exist_ok=True)
     (run_dir / "stage-22").mkdir(parents=True, exist_ok=True)
     (run_dir / "stage-23").mkdir(parents=True, exist_ok=True)
+    if smoke:
+        (run_dir / "HARNESS_RUN_TYPE.json").write_text(
+            json.dumps(
+                {
+                    "run_type": "smoke",
+                    "paper_acceptance_allowed": False,
+                    "reason": "smoke fixture",
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     (run_dir / "pipeline_summary.json").write_text(
         json.dumps(
             {
@@ -148,6 +162,219 @@ def create_fake_arc_run(
             encoding="utf-8",
         )
     return run_dir
+
+
+def configure_research_preflight_fixture(generated: Path) -> None:
+    (generated / "artifacts" / "data").mkdir(parents=True, exist_ok=True)
+    (generated / "artifacts" / "data" / "dataset_manifest.json").write_text(
+        json.dumps({"dataset": "synthetic-convex", "version": "v1"}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (generated / "artifacts" / "data" / "splits.json").write_text(
+        json.dumps({"train": "train[:80]", "validation": "train[80:90]", "test": "train[90:]"}, indent=2)
+        + "\n",
+        encoding="utf-8",
+    )
+    (generated / "configs" / "preprocess_smoke.json").write_text(
+        json.dumps({"seed": 7, "normalization": "none"}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (generated / "logs" / "data_verification.log").write_text("leakage check passed\n", encoding="utf-8")
+
+    (generated / "tests" / "metric_fixture.json").write_text(
+        json.dumps({"y_true": [0, 1, 1], "y_pred": [0, 1, 0], "expected": 2 / 3}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (generated / "scripts" / "metric_smoke_check.py").write_text(
+        """#!/usr/bin/env python3
+import json
+from pathlib import Path
+
+fixture = json.loads(Path("tests/metric_fixture.json").read_text())
+score = sum(int(a == b) for a, b in zip(fixture["y_true"], fixture["y_pred"])) / len(fixture["y_true"])
+raise SystemExit(0 if abs(score - fixture["expected"]) < 1e-12 else 1)
+""",
+        encoding="utf-8",
+    )
+
+    (generated / "configs" / "baseline_smoke.json").write_text(
+        json.dumps({"baseline": "constant-zero", "seed": 7}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (generated / "results" / "manifests" / "baseline-smoke").mkdir(parents=True, exist_ok=True)
+    (generated / "results" / "manifests" / "baseline-smoke" / "metrics.json").write_text(
+        json.dumps({"primary_metric": 0.67}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (generated / "logs" / "baseline-smoke.log").write_text("baseline completed\n", encoding="utf-8")
+    baseline_record = {
+        "run_id": "baseline-smoke",
+        "task_id": "R006",
+        "commit": "smoke",
+        "command": "python3 scripts/metric_smoke_check.py",
+        "config": "configs/baseline_smoke.json",
+        "config_hash": "sha256-smoke",
+        "dataset": "synthetic-convex",
+        "dataset_version": "v1",
+        "split": "test",
+        "seed": 7,
+        "hardware": "smoke",
+        "started_at": "2026-05-19T00:00:00Z",
+        "ended_at": "2026-05-19T00:00:01Z",
+        "status": "passed",
+        "metrics_path": "results/manifests/baseline-smoke/metrics.json",
+        "log_path": "logs/baseline-smoke.log",
+        "artifacts": ["results/manifests/baseline-smoke/metrics.json"],
+        "notes": "smoke-test reproduced baseline",
+    }
+    (generated / "experiments" / "manifests" / "baseline-smoke.json").write_text(
+        json.dumps(baseline_record, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    (generated / "docs" / "data.md").write_text(
+        """# Data Protocol
+
+## Canonical Data Sources
+- Dataset name: synthetic-convex
+- Version: v1
+- Location: artifacts/data/dataset_manifest.json
+- Checksum or manifest: artifacts/data/dataset_manifest.json
+
+## Splits
+- Train: train[:80]
+- Validation: train[80:90]
+- Test: train[90:]
+
+## Invariants
+- No train/test leakage.
+- Preprocessing is deterministic or records seeds.
+- Any filtered samples are logged.
+- Leakage check: passed
+
+## Verification Commands
+- `make verify-data`
+
+## Evidence
+- Data manifest path: artifacts/data/dataset_manifest.json
+- Split manifest path: artifacts/data/splits.json
+- Preprocessing config path: configs/preprocess_smoke.json
+- Last verification log: logs/data_verification.log
+""",
+        encoding="utf-8",
+    )
+    (generated / "docs" / "metrics.md").write_text(
+        """# Metrics Protocol
+
+## Primary Metric
+- Name: accuracy
+- Direction: higher is better
+- Script: scripts/metric_smoke_check.py
+- Aggregation rule: mean accuracy over the test split
+- Required splits: test
+
+## Secondary Metrics
+| Metric | Purpose | Script | Aggregation |
+|---|---|---|---|
+
+## Known-Answer Checks
+- Fixture: tests/metric_fixture.json
+- Expected output: 0.6666666666666666
+- Verification command: python3 scripts/metric_smoke_check.py
+
+## Claim Rules
+- Do not claim an improvement unless baseline and candidate metrics use the same dataset version, split, preprocessing, and aggregation rule.
+- Record run IDs, metric files, config hashes, and seeds for every reported comparison.
+- Negative or inconclusive results should be recorded rather than omitted.
+""",
+        encoding="utf-8",
+    )
+    (generated / "docs" / "baselines.md").write_text(
+        """# Baseline Protocol
+
+## Canonical Baselines
+| Baseline | Source | Config | Dataset/Split | Expected Range | Status |
+|---|---|---|---|---|---|
+| constant-zero | local fixture | configs/baseline_smoke.json | synthetic-convex/test | 0.60-0.70 | reproduced |
+
+## Accepted Baseline Runs
+Source of accepted numbers: own-run
+
+| Baseline | Run Record | Metrics Path | Config Path | Dataset/Split | Seed | Status |
+|---|---|---|---|---|---|---|
+| constant-zero | experiments/manifests/baseline-smoke.json | results/manifests/baseline-smoke/metrics.json | configs/baseline_smoke.json | synthetic-convex/test | 7 | reproduced |
+
+## Reproduction Rules
+- Baseline configs should be treated as locked unless a task explicitly changes them.
+- Any deviation from an upstream paper, repository, or official benchmark must be recorded in `DECISIONS.md`.
+- Baseline metrics must come from run manifests and metric files, not copied chat text.
+- Upstream paper numbers are reference context only; accepted baseline numbers must come from harness run records.
+""",
+        encoding="utf-8",
+    )
+    (generated / "docs" / "research_question.md").write_text(
+        """# Research Question
+
+## Hypothesis
+- Hypothesis: A stability principle from convex optimization predicts when adaptive proposal schedules reduce regret under noisy feedback.
+
+## Predictions
+- Confirming prediction: Schedules satisfying the stability bound reduce regret on the held-out synthetic task.
+- Rejection condition: If the same schedule raises regret or only improves one seed, the mechanism is rejected.
+
+## Unit Of Evidence
+- Evidence unit: run records, metric JSON files, confidence intervals, and citation-verified theory references.
+
+## Current Theory
+- Current Theory: Bounded update variation should reduce estimator variance under noisy feedback, connecting optimization stability to agent proposal dynamics.
+""",
+        encoding="utf-8",
+    )
+    (generated / "docs" / "novelty.md").write_text(
+        """# Novelty And Theory Gate
+
+## Required Framing
+- Gap statement: Existing agent-search baselines report performance without testing stability-derived schedules as a mechanism.
+- Community importance: The result would give ML researchers a falsifiable criterion for when adaptive search helps rather than a tuned recipe.
+- Theoretical mechanism: Stability of bounded update variation controls variance growth across noisy proposal steps.
+- Cross-field source: Convex optimization stability and stochastic approximation motivate the mechanism.
+- Falsifiable prediction: Regret should decrease when the schedule respects the bound and fail when the bound is violated.
+- Rejection condition: The theory is weakened if gains disappear under matched seeds and identical metrics.
+- Contribution type: mechanism
+- Incremental-risk decision: not-incremental
+
+## Verification Command
+- `make verify-novelty`
+""",
+        encoding="utf-8",
+    )
+    (generated / "docs" / "venue_readiness.md").write_text(
+        """# A* Venue Readiness Gate
+
+## Target
+- Target venue: NeurIPS
+
+## Criteria
+- Problem significance: Agentic search needs reproducible principles that explain when adaptation helps under noisy feedback.
+- Baseline standard: Compare to fixed schedule, tuned adaptive schedule, and reported official baseline under identical splits.
+- Ablation plan: Remove stability bound, vary noise, vary seed count, and test matched compute.
+- Statistical evidence plan: Five seeds with confidence intervals and paired tests on identical splits.
+- Reproducibility package: Release configs, manifests, metric scripts, logs, and paper evidence tables.
+- Citation grounding plan: Verify optimization stability and agent-search claims before final paper acceptance.
+- Non-incremental contribution: A falsifiable mechanism connects optimization stability to adaptive agent search.
+
+## A* Readiness Checklist
+- [x] Problem is important to the target venue community.
+- [x] Baselines include strong current methods, not only easy comparisons.
+- [x] Metrics and splits match accepted benchmark practice.
+- [x] Ablations isolate the proposed mechanism.
+- [x] Statistical evidence plan covers seeds or uncertainty.
+- [x] Reproducibility artifacts are planned before experiments.
+- [x] Citation grounding is required before paper acceptance.
+- [x] Contribution is mechanism/theory driven, not only an empirical improvement.
+""",
+        encoding="utf-8",
+    )
 
 
 def set_arc_experiment_mode(generated: Path, mode: str) -> None:
@@ -385,6 +612,122 @@ def main() -> int:
             print("source-smoke unexpectedly passed before it was configured", file=sys.stderr)
             return 1
 
+        for target, label in [
+            ("verify-data", "blank data manifest"),
+            ("verify-metric", "missing metric fixture"),
+            ("verify-venue", "missing A* venue checklist"),
+            ("research-preflight", "blank research preflight"),
+        ]:
+            failure = subprocess.run(
+                ["make", target],
+                cwd=generated,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if failure.returncode == 0:
+                print(f"{target} unexpectedly passed with {label}", file=sys.stderr)
+                return 1
+
+        arc_run_blocked = subprocess.run(
+            ["make", "arc-run", "TOPIC=blocked preflight smoke"],
+            cwd=generated,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if arc_run_blocked.returncode == 0 or "research-preflight" not in arc_run_blocked.stdout:
+            print("arc-run did not fail through research-preflight before ARC startup", file=sys.stderr)
+            return 1
+
+        fake_arc_python = generated / ".arc" / "venv" / "bin" / "python"
+        fake_arc_python.parent.mkdir(parents=True, exist_ok=True)
+        fake_arc_python.write_text(
+            """#!/usr/bin/env sh
+echo "$@" > artifacts/fake-arc-smoke-command.log
+exit 0
+""",
+            encoding="utf-8",
+        )
+        fake_arc_python.chmod(0o755)
+        (generated / "external" / "AutoResearchClaw").mkdir(parents=True, exist_ok=True)
+        (generated / "external" / "AutoResearchClaw" / "pyproject.toml").write_text(
+            "[project]\nname = \"fake-researchclaw\"\n",
+            encoding="utf-8",
+        )
+        subprocess.run(
+            ["make", "arc-run-smoke", "TOPIC=infra smoke"],
+            cwd=generated,
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        smoke_dirs = sorted((generated / "artifacts" / "arc-runs").glob("*infra-smoke"))
+        if not smoke_dirs or not (smoke_dirs[-1] / "HARNESS_RUN_TYPE.json").exists():
+            print("arc-run-smoke did not mark the run as smoke/non-paper", file=sys.stderr)
+            return 1
+
+        (generated / "docs" / "baselines.md").write_text(
+            """# Baseline Protocol
+
+## Canonical Baselines
+| Baseline | Source | Config | Dataset/Split | Expected Range | Status |
+|---|---|---|---|---|---|
+| paper-only | copied paper report | configs/missing.json | dataset/test | 0.90 | reported |
+
+## Accepted Baseline Runs
+Source of accepted numbers: paper-report
+
+| Baseline | Run Record | Metrics Path | Config Path | Dataset/Split | Seed | Status |
+|---|---|---|---|---|---|---|
+| paper-only | none | none | none | dataset/test | 0 | reported |
+""",
+            encoding="utf-8",
+        )
+        baseline_fail = subprocess.run(
+            ["make", "verify-baseline"],
+            cwd=generated,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if baseline_fail.returncode == 0:
+            print("verify-baseline unexpectedly passed with paper-only reported numbers", file=sys.stderr)
+            return 1
+
+        (generated / "docs" / "novelty.md").write_text(
+            """# Novelty And Theory Gate
+
+## Required Framing
+- Gap statement: add a small module to improve accuracy.
+- Community importance: better score.
+- Theoretical mechanism: small module improves features.
+- Cross-field source: none.
+- Falsifiable prediction: accuracy improves.
+- Rejection condition: accuracy does not improve.
+- Contribution type: small module improvement
+- Incremental-risk decision: incremental improvement
+""",
+            encoding="utf-8",
+        )
+        novelty_fail = subprocess.run(
+            ["make", "verify-novelty"],
+            cwd=generated,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if novelty_fail.returncode == 0:
+            print("verify-novelty unexpectedly passed a small-module improvement framing", file=sys.stderr)
+            return 1
+
+        configure_research_preflight_fixture(generated)
+        for target in [
+            "verify-data",
+            "verify-metric",
+            "verify-baseline",
+            "verify-novelty",
+            "verify-venue",
+            "research-preflight",
+        ]:
+            subprocess.run(["make", target], cwd=generated, check=True)
+
         fake_run = create_fake_arc_run(generated, "fake-arc-run")
         rel_fake = fake_run.relative_to(generated).as_posix()
         subprocess.run(["make", "arc-import", f"RUN_DIR={rel_fake}"], cwd=generated, check=True)
@@ -441,6 +784,19 @@ def main() -> int:
         )
         if metrics_fail.returncode == 0:
             print("arc-paper-gate unexpectedly passed with missing metrics summary", file=sys.stderr)
+            return 1
+
+        smoke_run = create_fake_arc_run(generated, "fake-smoke-arc-run", smoke=True)
+        rel_smoke = smoke_run.relative_to(generated).as_posix()
+        subprocess.run(["make", "arc-import", f"RUN_DIR={rel_smoke}"], cwd=generated, check=True)
+        smoke_gate = subprocess.run(
+            ["make", "arc-paper-gate", f"RUN_DIR={rel_smoke}"],
+            cwd=generated,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if smoke_gate.returncode == 0:
+            print("arc-paper-gate unexpectedly passed a smoke ARC run", file=sys.stderr)
             return 1
 
         agent_fail = subprocess.run(

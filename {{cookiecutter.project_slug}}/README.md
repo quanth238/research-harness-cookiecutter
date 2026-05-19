@@ -58,6 +58,8 @@ Research-specific checks remain flexible. Replace placeholder targets such as `s
 - `docs/data.md` - data sources, versions, checksums, splits, invariants.
 - `docs/metrics.md` - metrics, aggregation, known-answer checks.
 - `docs/baselines.md` - baselines and comparison protocol.
+- `docs/novelty.md` - novelty, theory mechanism, and non-incremental framing gate.
+- `docs/venue_readiness.md` - A* venue-readiness checklist.
 - `docs/experiments.md` - run records and experiment gates.
 - `docs/testing.md` - verification hierarchy and required checks.
 - `docs/artifacts.md` - logs, manifests, figures, tables, checkpoints, and submissions.
@@ -73,6 +75,8 @@ A result is not accepted because it looks plausible. It is accepted only when th
 For AutoResearchClaw-managed runs, `make arc-import RUN_DIR=...` records candidate output as inconclusive, and `make arc-paper-gate RUN_DIR=...` must pass before the final paper can be treated as accepted evidence.
 
 `make arc-bootstrap` creates `.arc/venv` for AutoResearchClaw and `.venv` for ARC sandbox experiment execution.
+
+`make arc-run` first runs `make research-preflight`, which requires data provenance, metric fixture checks, reproduced baseline evidence, novelty/theory framing, and A* venue readiness. Use `make arc-run-smoke` only for infrastructure testing; smoke runs cannot pass final paper acceptance.
 
 The default ARC auth mode is `ARC_AUTH=codex`, which uses the existing Codex CLI login through `codex exec`. The harness never reads `~/.codex/auth.json`. Codex calls default to `CODEX_MODEL=gpt-5.5` and `CODEX_REASONING_EFFORT=xhigh`; override those Make variables if your account or environment needs a different model. To use API-key auth instead, set `ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml`.
 

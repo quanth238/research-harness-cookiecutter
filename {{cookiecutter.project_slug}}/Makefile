@@ -19,10 +19,11 @@ REMOTE_ROOT ?= {{ cookiecutter.remote_wsl_root }}
 REMOTE_ARC_PYTHON ?= python3
 
 .PHONY: setup smoke test check verify-feature clean-session source-status source-smoke \
-	verify-protocol verify-data verify-metric verify-one-scene verify-figure handoff-check check-run-record \
-	arc-bootstrap arc-doctor arc-doctor-live arc-check arc-run arc-resume arc-import arc-verify arc-paper-gate agent-run \
+	verify-protocol verify-data verify-metric verify-baseline verify-novelty verify-venue research-preflight \
+	verify-one-scene verify-figure handoff-check check-run-record \
+	arc-bootstrap arc-doctor arc-doctor-live arc-check arc-run arc-run-smoke arc-resume arc-import arc-verify arc-paper-gate agent-run \
 	remote-wsl-doctor remote-wsl-sync-auth remote-wsl-arc-doctor remote-wsl-bootstrap remote-wsl-run \
-	remote-wsl-import remote-wsl-verify remote-wsl-paper-gate
+	remote-wsl-run-smoke remote-wsl-import remote-wsl-verify remote-wsl-paper-gate
 
 setup:
 	@mkdir -p work/verification_logs work/agent_runs work/agent_inbox work/agent_outbox work/locks experiments/manifests experiments/runs logs/verification results/manifests tests docs/kb/questions docs/kb/literature docs/kb/experiments docs/kb/findings docs/kb/decisions docs/kb/reviews roles templates scripts configs evals artifacts/figures artifacts/tables artifacts/checkpoints artifacts/arc-runs paper src external .arc agents
@@ -62,7 +63,12 @@ arc-check:
 
 arc-run:
 	@test -n "$(TOPIC)" || (echo "Usage: make arc-run TOPIC=\"research topic\"" && exit 2)
+	@$(MAKE) research-preflight
 	@CODEX_MODEL="$(CODEX_MODEL)" CODEX_REASONING_EFFORT="$(CODEX_REASONING_EFFORT)" $(PYTHON) scripts/arc_run.py --topic "$(TOPIC)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --config "$(ARC_CONFIG)" --run-root "$(ARC_RUN_ROOT)"
+
+arc-run-smoke:
+	@test -n "$(TOPIC)" || (echo "Usage: make arc-run-smoke TOPIC=\"infrastructure smoke topic\"" && exit 2)
+	@CODEX_MODEL="$(CODEX_MODEL)" CODEX_REASONING_EFFORT="$(CODEX_REASONING_EFFORT)" $(PYTHON) scripts/arc_run.py --smoke --topic "$(TOPIC)" --arc-dir "$(ARC_DIR)" --venv "$(ARC_VENV)" --config "$(ARC_CONFIG)" --run-root "$(ARC_RUN_ROOT)"
 
 arc-resume:
 	@test -n "$(RUN_DIR)" || (echo "Usage: make arc-resume RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
@@ -102,6 +108,10 @@ remote-wsl-run:
 	@test -n "$(TOPIC)" || (echo "Usage: make remote-wsl-run TOPIC=\"research topic\"" && exit 2)
 	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-run ARC_PYTHON="$(REMOTE_ARC_PYTHON)" TOPIC="$(TOPIC)"
 
+remote-wsl-run-smoke:
+	@test -n "$(TOPIC)" || (echo "Usage: make remote-wsl-run-smoke TOPIC=\"infrastructure smoke topic\"" && exit 2)
+	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-run-smoke ARC_PYTHON="$(REMOTE_ARC_PYTHON)" TOPIC="$(TOPIC)"
+
 remote-wsl-import:
 	@test -n "$(RUN_DIR)" || (echo "Usage: make remote-wsl-import RUN_DIR=artifacts/arc-runs/<run_id>" && exit 2)
 	@scripts/remote_wsl_exec.sh --ssh "$(REMOTE_SSH)" --distro "$(WSL_DISTRO)" --workdir "$(REMOTE_ROOT)" -- make arc-import ARC_PYTHON="$(REMOTE_ARC_PYTHON)" RUN_DIR="$(RUN_DIR)"
@@ -128,13 +138,25 @@ source-smoke:
 	@echo "source-smoke is not configured. Replace this target with a source-repo-specific smoke command before verifying source tasks." && exit 2
 
 verify-protocol:
-	@echo "verify-protocol is not configured. Replace this target with checks for research question, data, metric, and baseline protocol completeness." && exit 2
+	@$(PYTHON) scripts/verify_research_preflight.py protocol
 
 verify-data:
-	@echo "verify-data is not configured. Replace this target with dataset manifest, checksum, and split checks." && exit 2
+	@$(PYTHON) scripts/verify_research_preflight.py data
 
 verify-metric:
-	@echo "verify-metric is not configured. Replace this target with metric schema and known-answer checks." && exit 2
+	@$(PYTHON) scripts/verify_research_preflight.py metric
+
+verify-baseline:
+	@$(PYTHON) scripts/verify_research_preflight.py baseline
+
+verify-novelty:
+	@$(PYTHON) scripts/verify_research_preflight.py novelty
+
+verify-venue:
+	@$(PYTHON) scripts/verify_research_preflight.py venue
+
+research-preflight:
+	@$(PYTHON) scripts/verify_research_preflight.py all
 
 verify-one-scene:
 	@echo "verify-one-scene is not configured. Replace this target with a tiny end-to-end run." && exit 2

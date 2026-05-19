@@ -17,6 +17,7 @@ By default, the backend uses the existing Codex CLI login. The harness does not 
 make arc-check
 make arc-bootstrap
 make arc-doctor
+make research-preflight
 make arc-run TOPIC="your research topic"
 make arc-import RUN_DIR=artifacts/arc-runs/<run_id>
 make arc-verify RUN_DIR=artifacts/arc-runs/<run_id>
@@ -27,6 +28,12 @@ make arc-paper-gate RUN_DIR=artifacts/arc-runs/<run_id>
 AutoResearchClaw runtime and `.venv` for ARC sandbox experiment execution. This
 keeps ARC package dependencies separate from generated experiment code while
 matching `experiment.sandbox.python_path` in the ARC config.
+
+`make arc-run` runs `make research-preflight` first. That gate requires data
+provenance, metric fixture verification, at least one reproduced baseline run,
+novelty/theory framing, and A* venue readiness. Use `make arc-run-smoke
+TOPIC="..."` only for infrastructure tests; smoke runs are marked non-paper and
+cannot pass `make arc-paper-gate`.
 
 To override the Codex defaults:
 
@@ -49,5 +56,7 @@ make arc-run ARC_AUTH=openai ARC_CONFIG=configs/researchclaw.openai.yaml TOPIC="
 A draft paper is not a final result. `make arc-import RUN_DIR=...` records an imported run as inconclusive; `make arc-paper-gate RUN_DIR=...` must pass before the paper can be treated as an accepted research artifact. The gate rejects simulated experiments, missing metrics, missing citation reports, missing run records, and unverified citation summaries.
 
 The Codex backend used by AutoResearchClaw is text-generation only and runs Codex in a read-only sandbox. Codex role workers launched with `make agent-run` are separate and may edit assigned files under the normal harness task controls.
+
+For the three-agent operating prompt, see `templates/ARC_3_AGENT_PROMPT.md`.
 
 For GPU execution on the configured WSL runner, see `docs/remote_wsl.md`. Remote WSL targets only dispatch the same ARC commands to another machine; they do not bypass import, verification, citation, or paper gates.

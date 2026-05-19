@@ -47,6 +47,13 @@ def has_metric_content(data: dict[str, Any]) -> bool:
     return bool(data)
 
 
+def is_smoke_run(run_dir: Path) -> bool:
+    marker = load_json(run_dir / "HARNESS_RUN_TYPE.json")
+    if marker is None:
+        return False
+    return marker.get("run_type") == "smoke" or marker.get("paper_acceptance_allowed") is False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("run_dir")
@@ -56,6 +63,8 @@ def main() -> int:
     run_dir = (ROOT / args.run_dir).resolve()
     if not run_dir.exists():
         return fail(f"missing run directory: {run_dir}")
+    if is_smoke_run(run_dir):
+        return fail("smoke ARC runs bypass research-preflight and cannot pass final paper acceptance")
 
     verified, errors = verify_run(run_dir)
     if not verified:

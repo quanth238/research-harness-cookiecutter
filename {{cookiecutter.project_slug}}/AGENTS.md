@@ -35,6 +35,9 @@ This repository is an empirical research harness. The agent's job is not to work
 - Prefer cheap proxy validation before expensive GPU training, rendering, or robotics simulation.
 - Keep implementation changes separate from paper-writing and result-interpretation changes unless the task explicitly combines them.
 - Record negative results and failed runs; do not hide them by only reporting successful runs.
+- Do not run a serious AutoResearchClaw paper pipeline until `make research-preflight` passes.
+- Use `make arc-run-smoke` only for infrastructure checks; smoke runs cannot pass final paper acceptance.
+- Treat upstream paper baseline numbers as reference context only. Accepted baseline numbers must come from harness run records produced by our own runs.
 
 ## Commands
 - `make setup` prepares harness directories.
@@ -45,11 +48,14 @@ This repository is an empirical research harness. The agent's job is not to work
 - `make source-status` checks the wrapped source repository status.
 - `make handoff-check` validates end-of-session continuity artifacts.
 - `make check-run-record FILE=...` validates a research run manifest.
+- `make research-preflight` blocks serious ARC paper runs until data, metrics, reproduced baseline, novelty/theory, and venue-readiness gates pass.
+- `make verify-data`, `make verify-metric`, `make verify-baseline`, `make verify-novelty`, and `make verify-venue` run individual preflight gates.
 - `make arc-check` validates the static AutoResearchClaw managed backend scaffold.
 - `make arc-bootstrap` clones and installs the pinned AutoResearchClaw backend.
 - `make arc-doctor` validates the selected ARC auth mode. Default `ARC_AUTH=codex` uses Codex CLI login, not `OPENAI_API_KEY`.
 - `make arc-doctor-live` optionally spends a tiny Codex call to verify live model access.
 - `make arc-run TOPIC="..."` runs AutoResearchClaw under harness-controlled output paths.
+- `make arc-run-smoke TOPIC="..."` runs AutoResearchClaw for infrastructure testing only and marks the run as non-paper.
 - `make arc-import RUN_DIR=...`, `make arc-verify RUN_DIR=...`, and `make arc-paper-gate RUN_DIR=...` import and gate ARC outputs.
 - `make agent-run ROLE=... TASK=...` launches a bounded Codex CLI worker using file-based handoff.
 - `make remote-wsl-doctor` checks the configured WSL/GPU runner without mutating it.

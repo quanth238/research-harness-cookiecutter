@@ -8,7 +8,9 @@ Track long-running health of the project.
 | Source repo | Unknown | Not inspected | Upstream setup may be undocumented | Run `make source-status` and source smoke checks |
 | Data | Unknown | Not configured | Split or path assumptions may be implicit | Fill `docs/data.md` |
 | Metrics | Unknown | Not configured | Claims may use inconsistent aggregation | Fill `docs/metrics.md` and `make verify-metric` |
-| Baselines | Unknown | Not configured | Baseline configs may drift | Fill `docs/baselines.md` |
+| Baselines | Unknown | Not configured | Baseline configs may drift or use paper-reported numbers | Fill `docs/baselines.md` and `make verify-baseline` |
+| Novelty | Unknown | Not configured | ARC may optimize a small incremental idea | Fill `docs/novelty.md` and `make verify-novelty` |
+| Venue readiness | Unknown | Not configured | A* criteria may be unmet before expensive runs | Fill `docs/venue_readiness.md` and `make verify-venue` |
 | Evaluation | Unknown | Not configured | Metrics may not be reproducible | Fill `EVAL_PROTOCOL.md` |
 | Artifacts | C | Manifest template exists | Large outputs are ignored by default | Commit lightweight run and result manifests |
 | Failure learning | C | `docs/failure-log.md` exists | Negative evidence may not be reviewed before retries | Update failure log during `make clean-session` review |

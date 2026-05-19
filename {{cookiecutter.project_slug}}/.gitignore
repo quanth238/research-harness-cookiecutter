@@ -15,6 +15,7 @@ results/*
 !results/manifests/**
 external/AutoResearchClaw/
 .arc/
+.venv/
 artifacts/arc-runs/
 artifacts/checkpoints/
 *.ckpt

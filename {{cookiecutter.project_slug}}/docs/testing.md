@@ -10,6 +10,12 @@
 - `make smoke`
 - `make test`
 - `make check`
+- `make research-preflight`
+- `make verify-data`
+- `make verify-metric`
+- `make verify-baseline`
+- `make verify-novelty`
+- `make verify-venue`
 - `make verify-feature ID=R001`
 - `make handoff-check`
 

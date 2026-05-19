@@ -25,6 +25,7 @@ for script in [
     Path("scripts/import_arc_run.py"),
     Path("scripts/verify_arc_run.py"),
     Path("scripts/verify_paper_gate.py"),
+    Path("scripts/verify_research_preflight.py"),
     Path("scripts/run_agent.py"),
     Path("scripts/remote_wsl_exec.sh"),
     Path("scripts/remote_wsl_doctor.sh"),
